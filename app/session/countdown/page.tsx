@@ -1,0 +1,176 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import CountdownTimer from '@/components/timers/CountdownTimer'
+import { Button } from '@/components/ui/button'
+import { motion } from 'framer-motion'
+import { Loader2, XCircle } from 'lucide-react'
+
+export default function CountdownSessionPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [startTime, setStartTime] = useState<Date | null>(null)
+
+  const sessionNumber = searchParams.get('sessionNumber')
+  const participantId = typeof window !== 'undefined' ? localStorage.getItem('participantId') : null
+
+  useEffect(() => {
+    if (!participantId || !sessionNumber) {
+      router.push('/dashboard')
+      return
+    }
+
+    startSession()
+  }, [participantId, sessionNumber, router])
+
+  const startSession = async () => {
+    try {
+      const response = await fetch('/api/sessions/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          participantId,
+          sessionNumber: parseInt(sessionNumber!),
+          condition: 'COUNTDOWN',
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to start session')
+      }
+
+      const data = await response.json()
+      setSessionId(data.sessionId)
+      setStartTime(new Date(data.startTime))
+      setLoading(false)
+    } catch (err) {
+      console.error('Error starting session:', err)
+      setError('Failed to start session. Please try again.')
+      setLoading(false)
+    }
+  }
+
+  const handleComplete = async () => {
+    if (!sessionId) return
+
+    try {
+      const response = await fetch('/api/sessions/end', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to end session')
+      }
+
+      // Navigate to rating page
+      router.push(`/rating?sessionId=${sessionId}`)
+    } catch (err) {
+      console.error('Error ending session:', err)
+      alert('Failed to save session. Please try again.')
+    }
+  }
+
+  const handleEarlyStop = async () => {
+    if (!sessionId) return
+
+    const confirmed = confirm(
+      'Are you sure you want to stop early? Your progress will still be saved.'
+    )
+
+    if (confirmed) {
+      try {
+        const response = await fetch('/api/sessions/end', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId }),
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to end session')
+        }
+
+        router.push(`/rating?sessionId=${sessionId}`)
+      } catch (err) {
+        console.error('Error ending session:', err)
+        alert('Failed to save session. Please try again.')
+      }
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-primary" />
+          <p className="text-gray-600 dark:text-gray-400">Starting your session...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <XCircle className="w-16 h-16 mx-auto mb-4 text-red-500" />
+          <h2 className="text-2xl font-bold mb-2">Session Error</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
+          <Button onClick={() => router.push('/dashboard')}>
+            Return to Dashboard
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      {/* Header */}
+      <div className="border-b bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Focus Session #{sessionNumber}
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Countdown Timer
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleEarlyStop}>
+            Stop Early
+          </Button>
+        </div>
+      </div>
+
+      {/* Timer Display */}
+      <div className="flex-1 flex items-center justify-center p-8">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-2xl"
+        >
+          <CountdownTimer
+            durationSeconds={1500} // 25 minutes
+            onComplete={handleComplete}
+          />
+        </motion.div>
+      </div>
+
+      {/* Footer hint */}
+      <div className="border-t bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 py-3 text-center">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Focus on your work until the timer completes
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}

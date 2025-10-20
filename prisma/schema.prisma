@@ -1,0 +1,135 @@
+// Prisma schema for Timer Experiment
+// DATASCI 241 - Focus Timer Visualization Study
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enum for timer condition types
+enum TimerCondition {
+  COUNTDOWN  // Precise mm:ss countdown (control)
+  HOURGLASS  // Approximate hourglass visualization (treatment)
+}
+
+// Enum for timer preference
+enum TimerPreference {
+  COUNTDOWN
+  HOURGLASS
+  NO_PREFERENCE
+}
+
+// Participant model - stores anonymous subject information
+model Participant {
+  id                String   @id @default(uuid()) // Anonymous subject_id
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Randomization data - stores the predetermined session sequence
+  conditionSequence Json     // Array of conditions: ["COUNTDOWN", "HOURGLASS", "HOURGLASS", "COUNTDOWN", ...]
+
+  // Recruitment metadata (optional)
+  recruitmentBatch  String?  // e.g., "week1", "pilot", etc.
+  cohort            String?  // e.g., "MIDS_Fall2025"
+
+  // Relations
+  baselineSurvey      BaselineSurvey?
+  sessions            Session[]
+  postTreatmentSurvey PostTreatmentSurvey?
+
+  @@index([createdAt])
+}
+
+// Baseline survey - collected before any sessions
+model BaselineSurvey {
+  id            String   @id @default(uuid())
+  participantId String   @unique
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  // Time anxiety and self-reported focus metrics
+  timeAnxietyScore       Int      // 1-5 Likert scale (1 = low anxiety, 5 = high anxiety)
+  typicalFocusDuration   Int      // Self-reported typical focus session length in minutes
+  unitsEnrolled          Int?     // Number of units enrolled this semester (optional)
+
+  // Additional baseline questions (optional)
+  usesTimerCurrently     Boolean? // Do they currently use a timer for focus work?
+  preferredTimerType     String?  // If yes, what type?
+
+  completedAt   DateTime @default(now())
+
+  @@index([participantId])
+}
+
+// Session model - each focus session (25 minutes target)
+model Session {
+  id            String   @id @default(uuid())
+  participantId String
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  // Session details
+  condition          TimerCondition  // Which timer visualization was used
+  sessionNumber      Int             // Sequential session number for this participant (1, 2, 3...)
+  targetDuration     Int             // Target duration in seconds (default: 1500 = 25 minutes)
+
+  // Timing data - automatically logged
+  startTime          DateTime        // When participant started the session
+  endTime            DateTime?       // When participant stopped the session
+  actualDuration     Int?            // Calculated duration in seconds (endTime - startTime)
+
+  // Completion tracking
+  completedFullSession Boolean @default(false)  // Did they reach the target duration?
+  overrunAmount        Int?           // If they went past target, how many seconds? (null if stopped early)
+
+  // Session outcome
+  postSessionRating PostSessionRating?
+
+  createdAt     DateTime @default(now())
+
+  @@index([participantId, sessionNumber])
+  @@index([condition])
+  @@unique([participantId, sessionNumber]) // Each participant can only have one session with a given number
+}
+
+// Post-session rating - collected immediately after each session
+model PostSessionRating {
+  id        String   @id @default(uuid())
+  sessionId String   @unique
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  // Perceived experience ratings (1-5 Likert scales)
+  perceivedStress        Int  // 1 = not stressful, 5 = very stressful
+  easeOfFollowing        Int  // 1 = very difficult, 5 = very easy
+  subjectiveFocusQuality Int? // 1 = poor focus, 5 = excellent focus (optional)
+
+  // Optional qualitative feedback
+  comments String?
+
+  completedAt DateTime @default(now())
+
+  @@index([sessionId])
+}
+
+// Post-treatment survey - collected after all sessions are complete
+model PostTreatmentSurvey {
+  id            String   @id @default(uuid())
+  participantId String   @unique
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  // Timer preference
+  preferredTimer TimerPreference
+
+  // Qualitative feedback
+  qualitativeFeedback String  // Open-ended response about their experience
+
+  // Additional questions
+  wouldUseAgain       Boolean? // Would you use this timer app again?
+  recommendToOthers   Boolean? // Would you recommend it to others?
+
+  completedAt DateTime @default(now())
+
+  @@index([participantId])
+}
