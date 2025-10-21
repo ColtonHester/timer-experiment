@@ -43,32 +43,39 @@ Last updated: October 21, 2025
 - `components/timers/CountdownTimer.tsx` - Fixed ring animation and progress text
 - `components/timers/HourglassTimer.tsx` - Fixed sand fill animation
 
-## 📋 Next Up (Sprint 2 - Due Thursday)
+## ✅ Completed (Sprint 2)
 
 ### Admin Dashboard
-**Must-Have**:
-- [ ] Create `/app/admin/page.tsx` - Main admin dashboard
-- [ ] Real-time participation rate chart (% who completed 0, 1-2, 3-4, 5-6, 7-8 sessions)
-- [ ] Participant list table showing:
+**Must-Have** (All Complete!):
+- [x] Create `/app/admin/page.tsx` - Main admin dashboard
+- [x] Real-time participation rate chart (% who completed 0, 1-2, 3-4, 5-6, 7-8 sessions)
+- [x] Participant list table showing:
   - Access code (last 4 chars for privacy)
   - Sessions completed (X/8)
   - Last active timestamp
   - Days since registration
   - Session pacing indicator (⚠️ if >2 sessions in last 24 hours)
-- [ ] CSV export buttons with format selector
-- [ ] Protected route (password authentication)
-
-**Nice-to-Have**:
-- [ ] "Send Reminder" button (manual trigger, just logs to console for now)
-- [ ] Session completion timeline/heatmap (visual calendar view)
-- [ ] Average session duration by condition
-- [ ] Dropout rate calculation
+- [x] CSV export buttons with format selector
+- [x] Protected route (password authentication)
+- [x] Average session duration by condition (Countdown vs Hourglass)
+- [x] Refresh button for real-time updates
 
 ### Technical Tasks
-- [ ] Create `/api/admin/stats` endpoint for dashboard data
-- [ ] Add session pacing calculation utility
-- [ ] Add date/time formatting utilities
-- [ ] Create reusable chart components (using Recharts or similar)
+- [x] Create `/api/admin/stats` endpoint for dashboard data
+- [x] Session pacing calculation (built into stats endpoint)
+- [x] Date/time formatting (using native JS Date methods)
+- [x] Participation rate bar chart (custom CSS implementation)
+
+### Files Created in Sprint 2
+- `app/api/admin/stats/route.ts` - Statistics endpoint with all dashboard data
+- Enhanced `app/admin/page.tsx` - Full-featured admin dashboard
+
+### Nice-to-Have (Deferred to Future Sprints)
+- [ ] "Send Reminder" button (manual trigger) - Sprint 3
+- [ ] Session completion timeline/heatmap - Future enhancement
+- [ ] Dropout rate calculation - Future enhancement
+
+## 📋 Next Up (Sprint 3 - Email Tracking & Reminders)
 
 ## 🔮 Future Sprints
 

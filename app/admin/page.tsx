@@ -1,20 +1,50 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Download, Lock, Loader2 } from 'lucide-react'
+import { Download, Lock, Loader2, RefreshCw, AlertTriangle } from 'lucide-react'
+
+interface ParticipantData {
+  accessCodeLast4: string
+  sessionsCompleted: number
+  totalSessions: number
+  lastActiveAt: string | null
+  daysSinceRegistration: number
+  hasPacingWarning: boolean
+  createdAt: string
+}
+
+interface StatsData {
+  overview: {
+    totalParticipants: number
+    totalSessions: number
+    completedSessions: number
+    averageSessionsPerParticipant: number
+    avgCountdownDuration: number
+    avgHourglassDuration: number
+  }
+  participationRate: {
+    '0': number
+    '1-2': number
+    '3-4': number
+    '5-6': number
+    '7-8': number
+  }
+  participants: ParticipantData[]
+  lastUpdated: string
+}
 
 export default function AdminPage() {
   const [password, setPassword] = useState('')
   const [authenticated, setAuthenticated] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [stats, setStats] = useState<any>(null)
+  const [stats, setStats] = useState<StatsData | null>(null)
 
   const handleAuth = async () => {
     setLoading(true)
     try {
-      const response = await fetch(`/api/admin/export?password=${password}&format=all`)
+      const response = await fetch(`/api/admin/stats?password=${encodeURIComponent(password)}`)
       if (response.ok) {
         const data = await response.json()
         setStats(data)
@@ -26,6 +56,12 @@ export default function AdminPage() {
       alert('Authentication failed')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleRefresh = () => {
+    if (password && authenticated) {
+      handleAuth()
     }
   }
 
@@ -53,7 +89,7 @@ export default function AdminPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAuth()}
                 placeholder="Admin password"
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-4 py-2 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent dark:border-gray-600"
               />
               <Button onClick={handleAuth} disabled={loading} className="w-full">
                 {loading ? (
@@ -72,56 +108,206 @@ export default function AdminPage() {
     )
   }
 
+  if (!stats) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-primary" />
+          <p>Loading dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
+  const participationData = [
+    { label: '0 sessions', count: stats.participationRate['0'], color: 'bg-red-500' },
+    { label: '1-2 sessions', count: stats.participationRate['1-2'], color: 'bg-orange-500' },
+    { label: '3-4 sessions', count: stats.participationRate['3-4'], color: 'bg-yellow-500' },
+    { label: '5-6 sessions', count: stats.participationRate['5-6'], color: 'bg-blue-500' },
+    { label: '7-8 sessions', count: stats.participationRate['7-8'], color: 'bg-green-500' },
+  ]
+
+  const maxCount = Math.max(...participationData.map(d => d.count), 1)
+
   return (
     <div className="min-h-screen p-4 sm:p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Data export and monitoring for the Focus Timer Study
-          </p>
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center flex-wrap gap-4">
+          <div>
+            <h1 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">Admin Dashboard</h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Real-time monitoring - Focus Timer Experiment
+            </p>
+          </div>
+
+          <Button onClick={handleRefresh} variant="outline" disabled={loading}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
         </div>
 
         {/* Stats Overview */}
-        {stats && (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardDescription>Total Participants</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{stats.total_participants}</p>
-              </CardContent>
-            </Card>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardDescription>Total Participants</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold">{stats.overview.totalParticipants}</p>
+            </CardContent>
+          </Card>
 
-            <Card>
-              <CardHeader className="pb-3">
-                <CardDescription>Total Sessions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{stats.total_sessions}</p>
-              </CardContent>
-            </Card>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardDescription>Total Sessions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold">{stats.overview.totalSessions}</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {stats.overview.completedSessions} completed
+              </p>
+            </CardContent>
+          </Card>
 
-            <Card>
-              <CardHeader className="pb-3">
-                <CardDescription>Session Ratings</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{stats.total_ratings}</p>
-              </CardContent>
-            </Card>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardDescription>Avg Sessions/Participant</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold">{stats.overview.averageSessionsPerParticipant}</p>
+            </CardContent>
+          </Card>
+        </div>
 
-            <Card>
-              <CardHeader className="pb-3">
-                <CardDescription>Study Completions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{stats.total_post_treatment_surveys}</p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+        {/* Participation Rate Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Participation Rate</CardTitle>
+            <CardDescription>Distribution of session completion across participants</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {participationData.map((item) => (
+                <div key={item.label} className="flex items-center gap-4">
+                  <div className="w-28 text-sm font-medium text-right shrink-0">{item.label}</div>
+
+                  <div className="flex-1 bg-gray-100 dark:bg-gray-800 rounded-full h-8 relative min-w-0">
+                    <div
+                      className={`${item.color} h-8 rounded-full flex items-center justify-end pr-3 text-white text-sm font-medium transition-all`}
+                      style={{ width: `${Math.max((item.count / maxCount) * 100, item.count > 0 ? 8 : 0)}%` }}
+                    >
+                      {item.count > 0 && item.count}
+                    </div>
+                  </div>
+
+                  <div className="w-16 text-sm text-muted-foreground shrink-0">
+                    {stats.overview.totalParticipants > 0
+                      ? `${Math.round((item.count / stats.overview.totalParticipants) * 100)}%`
+                      : '0%'}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Average Session Duration */}
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle>Countdown Timer</CardTitle>
+              <CardDescription>Average session duration</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">
+                {Math.floor(stats.overview.avgCountdownDuration / 60)}m {stats.overview.avgCountdownDuration % 60}s
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle>Hourglass Timer</CardTitle>
+              <CardDescription>Average session duration</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">
+                {Math.floor(stats.overview.avgHourglassDuration / 60)}m {stats.overview.avgHourglassDuration % 60}s
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Participant Activity Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Participant Activity</CardTitle>
+            <CardDescription>Real-time session tracking with pacing warnings</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b text-left">
+                    <th className="pb-3 font-medium text-sm">Code</th>
+                    <th className="pb-3 font-medium text-sm">Progress</th>
+                    <th className="pb-3 font-medium text-sm">Last Active</th>
+                    <th className="pb-3 font-medium text-sm">Days Enrolled</th>
+                    <th className="pb-3 font-medium text-sm">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.participants.map((participant, index) => {
+                    const lastActive = participant.lastActiveAt
+                      ? new Date(participant.lastActiveAt).toLocaleDateString()
+                      : 'Never'
+
+                    return (
+                      <tr key={index} className="border-b last:border-0 hover:bg-muted/50">
+                        <td className="py-3 font-mono text-sm">...{participant.accessCodeLast4}</td>
+                        <td className="py-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">
+                              {participant.sessionsCompleted}/{participant.totalSessions}
+                            </span>
+                            <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                              <div
+                                className="bg-primary h-2 rounded-full transition-all"
+                                style={{
+                                  width: `${(participant.sessionsCompleted / participant.totalSessions) * 100}%`
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3 text-sm">{lastActive}</td>
+                        <td className="py-3 text-sm">{participant.daysSinceRegistration}</td>
+                        <td className="py-3">
+                          {participant.hasPacingWarning && (
+                            <div className="flex items-center gap-1 text-orange-600 text-sm">
+                              <AlertTriangle className="w-4 h-4" />
+                              <span>High pace</span>
+                            </div>
+                          )}
+                          {participant.sessionsCompleted === 8 && !participant.hasPacingWarning && (
+                            <span className="text-green-600 text-sm font-medium">Complete</span>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+
+              {stats.participants.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  No participants yet
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Export Options */}
         <Card>
@@ -206,6 +392,11 @@ export default function AdminPage() {
             </ul>
           </CardContent>
         </Card>
+
+        {/* Footer */}
+        <div className="text-center text-sm text-muted-foreground">
+          Last updated: {new Date(stats.lastUpdated).toLocaleString()}
+        </div>
       </div>
     </div>
   )
