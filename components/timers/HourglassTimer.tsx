@@ -122,20 +122,18 @@ export default function HourglassTimer({
             className="text-gray-300 dark:text-gray-700"
           />
 
-          {/* Top sand (draining) */}
+          {/* Top sand (draining) - starts full at y=20 */}
           <g clipPath="url(#topBulb)">
             <motion.rect
               x="70"
-              y={20 + (100 - topSandHeight) * 1.2}
               width="140"
-              height={topSandHeight * 1.2}
               fill="url(#sandGradient)"
-              initial={{ height: 120 }}
+              initial={false}
               animate={{
-                y: 20 + (100 - topSandHeight) * 1.2,
-                height: topSandHeight * 1.2
+                y: 20 + ((100 - topSandHeight) / 100) * 140,
+                height: (topSandHeight / 100) * 140
               }}
-              transition={{ duration: 0.5, ease: 'linear' }}
+              transition={{ duration: 1, ease: 'linear' }}
             />
           </g>
 
@@ -163,19 +161,18 @@ export default function HourglassTimer({
             </>
           )}
 
-          {/* Bottom sand (filling) */}
+          {/* Bottom sand (filling) - anchored at bottom (y=380) */}
           <g clipPath="url(#bottomBulb)">
             <motion.rect
               x="70"
-              y={240 + (100 - bottomSandHeight) * 1.4}
               width="140"
-              height={bottomSandHeight * 1.4}
               fill="url(#sandGradient)"
+              initial={false}
               animate={{
-                y: 240 + (100 - bottomSandHeight) * 1.4,
-                height: bottomSandHeight * 1.4
+                y: 380 - (bottomSandHeight / 100) * 140,
+                height: (bottomSandHeight / 100) * 140
               }}
-              transition={{ duration: 0.3, ease: 'linear' }}
+              transition={{ duration: 1, ease: 'linear' }}
             />
           </g>
 

@@ -53,10 +53,11 @@ export default function CountdownTimer({
   }, [isRunning, onComplete, onTick])
 
   // Calculate progress for the ring - ring depletes as time runs out
-  const progress = (remainingSeconds / durationSeconds) * 100
   const circumference = 2 * Math.PI * 120 // radius = 120
-  // Starts at 0 (full visible ring) and increases to circumference (fully hidden)
-  const strokeDashoffset = circumference - (progress / 100) * circumference
+  const progress = (remainingSeconds / durationSeconds) * 100 // percentage remaining
+  // strokeDashoffset: 0 = full ring, circumference = empty ring
+  // As time depletes (remainingSeconds decreases), offset should INCREASE
+  const strokeDashoffset = circumference * (1 - remainingSeconds / durationSeconds)
 
   return (
     <div className="flex flex-col items-center justify-center h-full space-y-8">
@@ -85,17 +86,15 @@ export default function CountdownTimer({
             cx="150"
             cy="150"
             r="120"
-            stroke="currentColor"
+            stroke="#3b82f6"
             strokeWidth="12"
             fill="none"
             strokeLinecap="round"
-            className="text-primary"
-            style={{
-              strokeDasharray: circumference,
-              strokeDashoffset,
-            }}
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            initial={false}
             animate={{ strokeDashoffset }}
-            transition={{ duration: 0.5, ease: 'easeInOut' }}
+            transition={{ duration: 1, ease: 'linear' }}
           />
         </svg>
 
@@ -123,7 +122,7 @@ export default function CountdownTimer({
           Keep focusing on your task
         </p>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          {Math.floor((progress / 100) * 25)} of 25 minutes complete
+          {Math.floor(((100 - progress) / 100) * 25)} of 25 minutes complete
         </p>
       </div>
 
