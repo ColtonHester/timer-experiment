@@ -29,6 +29,10 @@ model Participant {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
+  // Access code for participant persistence across sessions
+  accessCode        String   @unique  // e.g., "MIDS-A7B3-C9X2"
+  emailCollectedAt  DateTime?         // Timestamp when email was provided (for consent tracking)
+
   // Randomization data - stores the predetermined session sequence
   conditionSequence Json     // Array of conditions: ["COUNTDOWN", "HOURGLASS", "HOURGLASS", "COUNTDOWN", ...]
 
@@ -42,6 +46,7 @@ model Participant {
   postTreatmentSurvey PostTreatmentSurvey?
 
   @@index([createdAt])
+  @@index([accessCode])
 }
 
 // Baseline survey - collected before any sessions

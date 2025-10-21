@@ -10,12 +10,14 @@ import { Loader2 } from 'lucide-react'
 export default function BaselineSurveyPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [accessCode, setAccessCode] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     timeAnxietyScore: 3,
     typicalFocusDuration: 25,
     unitsEnrolled: '',
     usesTimerCurrently: '',
     preferredTimerType: '',
+    email: '', // Optional email for recruitment tracking
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,6 +34,7 @@ export default function BaselineSurveyPage() {
           unitsEnrolled: formData.unitsEnrolled ? parseInt(formData.unitsEnrolled) : null,
           usesTimerCurrently: formData.usesTimerCurrently === 'yes',
           preferredTimerType: formData.preferredTimerType || null,
+          email: formData.email || null, // Optional email
         }),
       })
 
@@ -39,13 +42,13 @@ export default function BaselineSurveyPage() {
         throw new Error('Failed to submit survey')
       }
 
-      const { participantId } = await response.json()
+      const { participantId, accessCode: code } = await response.json()
 
       // Store participant ID in localStorage for this browser session
       localStorage.setItem('participantId', participantId)
 
-      // Redirect to dashboard
-      router.push('/dashboard')
+      // Show access code to user before redirecting
+      setAccessCode(code)
     } catch (error) {
       console.error('Error submitting survey:', error)
       alert('Failed to submit survey. Please try again.')
@@ -61,6 +64,85 @@ export default function BaselineSurveyPage() {
     { value: 4, label: '4 - Quite a bit' },
     { value: 5, label: '5 - Extremely' },
   ]
+
+  // If access code is received, show success screen
+  if (accessCode) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 sm:p-8">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="max-w-2xl w-full"
+        >
+          <Card className="border-2 border-green-500">
+            <CardHeader className="text-center">
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <CardTitle className="text-3xl">Your Access Code</CardTitle>
+              <CardDescription>
+                Save this code! You'll need it to resume your sessions.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Access Code Display */}
+              <div className="bg-primary/10 border-2 border-primary rounded-lg p-6 text-center">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Your unique access code:</p>
+                <p className="text-4xl font-mono font-bold text-primary tracking-wider">{accessCode}</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-4"
+                  onClick={() => {
+                    navigator.clipboard.writeText(accessCode)
+                    alert('Access code copied to clipboard!')
+                  }}
+                >
+                  Copy to Clipboard
+                </Button>
+              </div>
+
+              {/* Instructions */}
+              <div className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
+                <p className="font-semibold text-gray-900 dark:text-white">Important:</p>
+                <ul className="list-disc list-inside space-y-2">
+                  <li>Write this code down or save it somewhere safe</li>
+                  <li>You'll use this code to resume your progress if you close your browser</li>
+                  <li>Each code is unique and works only for your account</li>
+                  {formData.email && (
+                    <li>We'll also email this code to <strong>{formData.email}</strong></li>
+                  )}
+                </ul>
+              </div>
+
+              {/* Bookmark URL Option */}
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                <p className="text-sm font-semibold mb-2">Quick Resume Link:</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                  Bookmark this URL to skip entering your code:
+                </p>
+                <code className="block bg-white dark:bg-gray-900 p-2 rounded text-xs break-all">
+                  {typeof window !== 'undefined' ? `${window.location.origin}/resume?code=${accessCode}` : ''}
+                </code>
+              </div>
+
+              {/* Continue Button */}
+              <Button
+                onClick={() => router.push('/dashboard')}
+                size="lg"
+                className="w-full"
+              >
+                Continue to Dashboard →
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 sm:p-8">
@@ -148,6 +230,27 @@ export default function BaselineSurveyPage() {
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white placeholder:text-gray-400"
                   placeholder="e.g., 12"
                 />
+              </div>
+
+              {/* Email (Recommended) */}
+              <div className="space-y-3">
+                <label className="block text-sm font-medium">
+                  Email address
+                  <span className="text-amber-600 ml-1">(Recommended)</span>
+                </label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white placeholder:text-gray-400"
+                  placeholder="your.email@berkeley.edu"
+                />
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  <strong>Why we need this:</strong> We'll email you your access code and send reminders to complete sessions.
+                  Your email will be kept separate from your anonymous study data.
+                </p>
               </div>
 
               {/* Current Timer Usage */}

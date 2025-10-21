@@ -114,19 +114,31 @@ export default function HomePage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6, duration: 0.5 }}
-          className="flex flex-col sm:flex-row gap-4 justify-center"
+          className="space-y-4"
         >
-          <Link href="/consent">
-            <Button size="xl" className="w-full sm:w-auto">
-              Get Started
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/consent">
+              <Button size="xl" className="w-full sm:w-auto">
+                Get Started
+              </Button>
+            </Link>
 
-          <Link href="/about">
-            <Button size="xl" variant="outline" className="w-full sm:w-auto">
-              Learn More
-            </Button>
-          </Link>
+            <Link href="/about">
+              <Button size="xl" variant="outline" className="w-full sm:w-auto">
+                Learn More
+              </Button>
+            </Link>
+          </div>
+
+          {/* Returning Participant Link */}
+          <div className="text-center">
+            <Link
+              href="/login"
+              className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors"
+            >
+              Already started? <span className="font-semibold">Resume with your access code →</span>
+            </Link>
+          </div>
         </motion.div>
 
         {/* Footer Note */}

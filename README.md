@@ -110,16 +110,36 @@ npm run db:studio    # Open Prisma Studio (database GUI)
 
 ## Experiment Flow
 
+### First-Time Participants
 1. **Landing Page** → Introduction to the study
 2. **Consent** → Informed consent form
-3. **Baseline Survey** → Pre-treatment questionnaire
-4. **Dashboard** → View progress, start sessions
-5. **Session** → 25-minute timer (countdown or hourglass)
-6. **Rating** → Post-session brief survey
-7. **Repeat** → Complete all 8 sessions
-8. **Post-Survey** → Final feedback
+3. **Baseline Survey** → Pre-treatment questionnaire + email (optional)
+4. **Access Code** → Receive unique code (e.g., `MIDS-A7B3-C9X2`) - **SAVE THIS!**
+5. **Dashboard** → View progress, start sessions
+6. **Session** → 25-minute timer (countdown or hourglass)
+7. **Rating** → Post-session brief survey
+8. **Repeat** → Complete all 8 sessions
+9. **Post-Survey** → Final feedback
+
+### Returning Participants
+You can resume your progress in three ways:
+
+**Fastest**: Bookmark your personalized URL
+```
+http://localhost:3000/resume?code=MIDS-XXXX-YYYY
+```
+
+**Alternative**: Manual login at `/login` page
+
+**Last resort**: Click "Already started? Resume with your access code →" on landing page
 
 ## Key Features
+
+### Access Code System
+- **Unique codes**: Each participant gets a code like `MIDS-A7B3-C9X2`
+- **Session persistence**: Resume your progress across browsers/devices
+- **No passwords needed**: Just save your access code
+- **Email reminders**: Optional email collection for study reminders (emails stored separately from experiment data)
 
 ### Randomization
 - Each participant gets a randomized sequence of 8 sessions
@@ -129,7 +149,7 @@ npm run db:studio    # Open Prisma Studio (database GUI)
 ### Data Collection
 - **Automated timing**: All start/stop timestamps logged automatically
 - **Calculated metrics**: Duration, completion, overrun computed server-side
-- **Anonymous**: UUID-based participant IDs, no PII
+- **Anonymous**: UUID-based participant IDs, experiment data contains no PII
 
 ### Timer Conditions
 
@@ -218,15 +238,24 @@ ADMIN_PASSWORD="changeme"                     # Admin panel password
 
 Access the admin panel to export data as CSV:
 
-```
-http://localhost:3000/api/admin/export?password=YOUR_ADMIN_PASSWORD
+```bash
+# Export all sessions
+http://localhost:3000/api/admin/export?password=YOUR_ADMIN_PASSWORD&format=sessions
+
+# Export baseline surveys
+http://localhost:3000/api/admin/export?password=YOUR_ADMIN_PASSWORD&format=baseline
+
+# Export post-session ratings
+http://localhost:3000/api/admin/export?password=YOUR_ADMIN_PASSWORD&format=ratings
+
+# Export post-treatment surveys
+http://localhost:3000/api/admin/export?password=YOUR_ADMIN_PASSWORD&format=post-treatment
+
+# Export everything as JSON
+http://localhost:3000/api/admin/export?password=YOUR_ADMIN_PASSWORD&format=all
 ```
 
-Returns:
-- `sessions.csv` - All session data
-- `baseline.csv` - Baseline survey responses
-- `ratings.csv` - Post-session ratings
-- `post_treatment.csv` - Final surveys
+**Note**: Set `ADMIN_PASSWORD` in your `.env` file. Default is `changeme` (change this in production!)
 
 ## Database Schema
 
