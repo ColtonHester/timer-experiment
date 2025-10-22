@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { getConditionForSession } from '@/lib/randomization'
+import { getConditionForSession, TimerCondition } from '@/lib/randomization'
 
 export async function GET(
   request: NextRequest,
@@ -28,7 +28,7 @@ export async function GET(
     }
 
     // Get the condition sequence (stored as JSON array)
-    const sequence = participant.conditionSequence as string[]
+    const sequence = participant.conditionSequence as TimerCondition[]
     const totalSessions = sequence.length
 
     // Calculate completed sessions
@@ -39,9 +39,9 @@ export async function GET(
     const isComplete = completedSessions >= totalSessions || !!participant.postTreatmentSurvey
 
     // Get next condition from sequence
-    let nextCondition: 'COUNTDOWN' | 'HOURGLASS' | null = null
+    let nextCondition: TimerCondition | null = null
     if (nextSessionNumber <= totalSessions && !isComplete) {
-      nextCondition = getConditionForSession(sequence, nextSessionNumber) as 'COUNTDOWN' | 'HOURGLASS'
+      nextCondition = getConditionForSession(sequence, nextSessionNumber)
     }
 
     return NextResponse.json({
