@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Loader2, AlertCircle } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -13,7 +13,7 @@ import { motion } from 'framer-motion'
  * This page automatically verifies the access code from the URL
  * and redirects to the dashboard if valid.
  */
-export default function ResumePage() {
+function ResumeContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [error, setError] = useState('')
@@ -86,5 +86,17 @@ export default function ResumePage() {
         <p className="text-gray-600 dark:text-gray-400">Please wait while we log you in...</p>
       </motion.div>
     </div>
+  )
+}
+
+export default function ResumePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-16 h-16 animate-spin text-primary" />
+      </div>
+    }>
+      <ResumeContent />
+    </Suspense>
   )
 }

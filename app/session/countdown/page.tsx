@@ -1,13 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import CountdownTimer from '@/components/timers/CountdownTimer'
 import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
 import { Loader2, XCircle } from 'lucide-react'
 
-export default function CountdownSessionPage() {
+function CountdownSessionContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [sessionId, setSessionId] = useState<string | null>(null)
@@ -172,5 +172,17 @@ export default function CountdownSessionPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function CountdownSessionPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      </div>
+    }>
+      <CountdownSessionContent />
+    </Suspense>
   )
 }
