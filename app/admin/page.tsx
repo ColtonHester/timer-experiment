@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Download, Lock, Loader2, RefreshCw, AlertTriangle } from 'lucide-react'
+import { Download, Lock, Loader2, RefreshCw, AlertTriangle, Mail } from 'lucide-react'
 
 interface ParticipantData {
   accessCodeLast4: string
@@ -141,10 +141,16 @@ export default function AdminPage() {
             </p>
           </div>
 
-          <Button onClick={handleRefresh} variant="outline" disabled={loading}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+          <div className="flex gap-3">
+            <Button onClick={() => window.location.href = '/admin/reminders'} variant="default">
+              <Mail className="w-4 h-4 mr-2" />
+              Manage Reminders
+            </Button>
+            <Button onClick={handleRefresh} variant="outline" disabled={loading}>
+              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
         </div>
 
         {/* Stats Overview */}

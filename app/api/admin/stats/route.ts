@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { getRecruitmentStats } from '@/lib/supabase-recruitment'
 
 export async function GET(request: NextRequest) {
   try {
@@ -99,6 +100,15 @@ export async function GET(request: NextRequest) {
       ? hourglassSessions.reduce((sum, s) => sum + (s.actualDuration || 0), 0) / hourglassSessions.length
       : 0
 
+    // Get recruitment database statistics (non-blocking)
+    let recruitmentStats = null
+    try {
+      recruitmentStats = await getRecruitmentStats()
+    } catch (error) {
+      console.error('Warning: Failed to fetch recruitment stats:', error)
+      // Continue without recruitment stats if database is not configured
+    }
+
     return NextResponse.json({
       overview: {
         totalParticipants,
@@ -110,6 +120,7 @@ export async function GET(request: NextRequest) {
       },
       participationRate: participationBuckets,
       participants: participantList,
+      recruitment: recruitmentStats,
       lastUpdated: new Date().toISOString(),
     })
   } catch (error) {

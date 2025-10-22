@@ -16,31 +16,54 @@ This is a web application for conducting a causal inference experiment for DATAS
 
 ## 🆕 Recent Major Updates (October 2025)
 
-### Access Code System (Sprint 1 - COMPLETED)
+### Sprint 3: Email Tracking & Reminders (COMPLETED - October 22)
+**Problem Solved**: Admin can now send reminder emails to participants and track engagement.
+
+**Implementation**:
+- Dual-database architecture: Local PostgreSQL for experiment data, Supabase for recruitment/email data
+- Three responsive HTML email templates with UC Berkeley branding
+- Manual reminder management UI with filtering and bulk send
+- Two-option unsubscribe flow (reminders only vs. full withdrawal)
+- Row Level Security with service_role authentication
+
+**Key Files**:
+- `lib/supabase-recruitment.ts` - Supabase client & helper functions
+- `lib/email-templates.tsx` - Three HTML email templates (Day 3, 7, 14)
+- `app/api/recruitment/sync/route.ts` - Email sync after baseline
+- `app/api/recruitment/send-reminder/route.ts` - Individual/bulk reminder sending
+- `app/api/recruitment/unsubscribe/route.ts` - Unsubscribe handling
+- `app/admin/reminders/page.tsx` - Reminder management UI
+- `app/unsubscribe/page.tsx` - Unsubscribe landing page
+- `supabase/experiment-schema.sql` - Production experiment DB schema
+- `supabase/recruitment-schema.sql` - Recruitment DB with RLS policies
+
+**Documentation**:
+- `SUPABASE_SETUP.md` - Complete database setup guide
+- `RESEND_SETUP.md` - Email service configuration guide
+- `RECRUITMENT_GUIDE.md` - Participant management workflow
+
+### Sprint 2: Admin Dashboard (COMPLETED)
+**Problem Solved**: Research team can now monitor participant progress and export data.
+
+**Implementation**:
+- Real-time participation rate chart (0, 1-2, 3-4, 5-6, 7-8 sessions)
+- Participant list with session counts, last active, pacing warnings
+- CSV export for all data types (sessions, surveys, ratings)
+- Average session duration by condition (Countdown vs Hourglass)
+
+**Key Files**:
+- `app/admin/page.tsx` - Full admin dashboard
+- `app/api/admin/stats/route.ts` - Statistics endpoint
+- `app/api/admin/reminders/list/route.ts` - Reminder eligibility list
+
+### Sprint 1: Access Code System (COMPLETED)
 **Problem Solved**: Participants can now resume their progress across browser sessions.
 
 **Implementation**:
-- Unique access codes generated in format: `MIDS-XXXX-YYYY` (e.g., `MIDS-A7B3-C9X2`)
-- Participants receive code after completing baseline survey
-- Can login via `/login` page or bookmark URL `/resume?code=MIDS-XXXX-YYYY`
-- Email collection added (optional but recommended) for recruitment tracking
-
-**Key Files**:
-- `lib/accessCode.ts` - Code generation & validation
-- `app/api/auth/verify-code/route.ts` - Verification endpoint
-- `app/login/page.tsx` - Manual login page
-- `app/resume/page.tsx` - URL-based auto-login
-- `app/baseline/page.tsx` - Updated to show access code & collect email
-
-### Timer Visualizations (FIXED)
-- **Countdown timer**: Ring now depletes correctly, progress text fixed
-  - Fixed `strokeDashoffset` calculation: `circumference * (1 - progress / 100)`
-  - Added `initial={false}` to prevent startup animation
-  - Fixed progress text to show elapsed time instead of remaining time
-- **Hourglass timer**: Bottom chamber now fills with sand as expected
-  - Fixed top sand height calculation: changed 120px to actual 140px
-  - Fixed bottom sand y-position: anchored at y=380
-  - Added `initial={false}` to both sand rectangles
+- Unique access codes in format `MIDS-XXXX-YYYY` (e.g., `MIDS-A7B3-C9X2`)
+- Login via `/login` page or bookmark URL `/resume?code=MIDS-XXXX-YYYY`
+- Email collection in baseline survey for recruitment tracking
+- Timer visualization bugs fixed (countdown ring, hourglass sand)
 
 ## Implementation Roadmap
 
@@ -53,41 +76,44 @@ This is a web application for conducting a causal inference experiment for DATAS
 - [x] Updated baseline survey to collect email & show access code
 - [x] Timer visualization bugs fixed
 
-### 📋 Sprint 2: Admin Dashboard (Next - Due Thursday)
-**Must-Have**:
-- [ ] Real-time participation rate chart
-- [ ] Participant list table (without emails for privacy)
-- [ ] CSV export button integration
-- [ ] Session pacing warnings (>2/day indicator)
+### ✅ Sprint 2: Admin Dashboard (COMPLETED)
+- [x] Real-time participation rate chart
+- [x] Participant list table (anonymized, last 4 digits of access code)
+- [x] CSV export button with format selector
+- [x] Session pacing warnings (>2/day indicator)
+- [x] Average session duration by condition
+- [x] Password-protected admin route
 
-**Nice-to-Have**:
-- [ ] "Send Reminder" button (manual email trigger)
-- [ ] Session completion timeline/heatmap
-- [ ] Average session duration metrics
+### ✅ Sprint 3: Email Tracking & Reminders (COMPLETED)
+- [x] Set up Supabase recruitment database (separate from experiment data)
+- [x] Create recruitment sync API endpoints
+- [x] Build reminder management page with filtering and bulk send
+- [x] Implement manual reminder system:
+  - Day 3: If <2 sessions completed, 3+ days enrolled
+  - Day 7: If <4 sessions completed, 7+ days enrolled
+  - Day 14: If <6 sessions completed, 14+ days enrolled
+- [x] Three responsive email templates with UC Berkeley branding
+- [x] Resend integration for email delivery
+- [x] Two-option unsubscribe flow (reminders only vs. withdrawal)
+- [x] Comprehensive documentation (Supabase, Resend, Recruitment guides)
 
-### 📋 Sprint 3: Email Tracking & Reminders
-- [ ] Set up Supabase recruitment database (separate from experiment data)
-- [ ] Create recruitment sync API endpoints
-- [ ] Build reminder management page
-- [ ] Implement automated reminder cadence:
-  - Day 3: If <2 sessions completed
-  - Day 7: If <4 sessions completed
-  - Day 14: If <6 sessions completed
-
-### 📋 Sprint 4: Deployment
+### 📋 Sprint 4: Deployment (IN PROGRESS)
 - [ ] Write DEPLOYMENT.md guide
-- [ ] Write RECRUITMENT.md workflow guide
 - [ ] Deploy to Vercel
-- [ ] Set up production PostgreSQL (Supabase)
+- [ ] Configure production environment variables
 - [ ] Test in production environment
+- [ ] Verify email delivery in production
 
 ## Tech Stack
 
-- **Frontend**: Next.js 14 (App Router) + TypeScript + Tailwind CSS
+- **Frontend**: Next.js 15 (App Router) + TypeScript + Tailwind CSS
 - **UI**: Framer Motion for animations, shadcn/ui components
 - **Backend**: Next.js API Routes (serverless functions)
-- **Database**: PostgreSQL with Prisma ORM
-- **Deployment**: Vercel (recommended) or AWS Amplify
+- **Databases**:
+  - PostgreSQL with Prisma ORM (experiment data - anonymous)
+  - Supabase (recruitment data - PII/emails)
+- **Email**: Resend (3,000 emails/month free tier)
+- **Deployment**: Vercel (recommended)
 
 ## Architecture
 
@@ -96,33 +122,53 @@ timer-experiment/
 ├── app/                    # Next.js App Router pages
 │   ├── page.tsx           # Landing page (has "Resume" link)
 │   ├── consent/           # Consent form
-│   ├── baseline/          # Baseline survey (generates access code)
-│   ├── login/             # 🆕 Access code login page
-│   ├── resume/            # 🆕 URL-based auto-login
+│   ├── baseline/          # Baseline survey (generates access code, collects email)
+│   ├── login/             # Access code login page
+│   ├── resume/            # URL-based auto-login
 │   ├── dashboard/         # Participant dashboard
 │   ├── session/           # Timer session pages
 │   │   ├── countdown/     # Countdown timer (FIXED)
 │   │   └── hourglass/     # Hourglass timer (FIXED)
 │   ├── rating/            # Post-session ratings
 │   ├── post-survey/       # Post-treatment survey
+│   ├── unsubscribe/       # 🆕 Unsubscribe landing page
+│   ├── admin/             # 🆕 Admin dashboard
+│   │   ├── page.tsx       # Main dashboard (stats, export)
+│   │   └── reminders/     # 🆕 Reminder management UI
 │   └── api/               # API endpoints
-│       ├── auth/          # 🆕 Authentication endpoints
+│       ├── auth/          # Authentication endpoints
 │       │   └── verify-code/ # Access code verification
 │       ├── participants/  # Participant creation & management
 │       ├── sessions/      # Session logging
-│       ├── surveys/       # Survey submissions (updated for email)
-│       └── admin/         # Admin endpoints (export)
+│       ├── surveys/       # Survey submissions (emails sync to recruitment DB)
+│       ├── recruitment/   # 🆕 Recruitment & reminder endpoints
+│       │   ├── sync/      # Email sync to Supabase
+│       │   ├── send-reminder/ # Individual/bulk reminder sending
+│       │   └── unsubscribe/ # Unsubscribe handling
+│       └── admin/         # Admin endpoints
+│           ├── export/    # CSV data export
+│           ├── stats/     # Dashboard statistics
+│           └── reminders/list/ # 🆕 Reminder eligibility list
 ├── components/            # React components
 │   ├── timers/           # Timer visualizations
 │   └── ui/               # Reusable UI components
 ├── lib/
 │   ├── db.ts             # Prisma client singleton
-│   ├── accessCode.ts     # 🆕 Access code generation & validation
+│   ├── accessCode.ts     # Access code generation & validation
 │   ├── randomization.ts  # Session sequence algorithm
+│   ├── supabase-recruitment.ts # 🆕 Supabase client for recruitment DB
+│   ├── email-templates.tsx # 🆕 HTML email templates (Day 3, 7, 14)
 │   └── utils.ts          # Utility functions
 ├── prisma/
-│   └── schema.prisma     # Database schema
-└── types/                # TypeScript type definitions
+│   └── schema.prisma     # Experiment database schema
+├── supabase/             # 🆕 Supabase SQL schemas
+│   ├── experiment-schema.sql  # Production experiment DB
+│   └── recruitment-schema.sql # Recruitment DB with RLS
+├── types/                # TypeScript type definitions
+└── docs/                 # Documentation
+    ├── SUPABASE_SETUP.md
+    ├── RESEND_SETUP.md
+    └── RECRUITMENT_GUIDE.md
 ```
 
 ## Database Schema
@@ -169,6 +215,34 @@ timer-experiment/
    - `qualitativeFeedback` (String): Open-ended response
    - `wouldUseAgain` (Boolean, optional)
    - `recommendToOthers` (Boolean, optional)
+
+### Recruitment Database (Supabase - Separate Project)
+
+**Purpose**: Store PII (emails) separately from anonymous research data for IRB compliance.
+
+6. **RecruitmentRecord**: Email addresses and reminder tracking (separate Supabase project)
+   - `id` (UUID): Primary key
+   - `participantId` (UUID, unique): Links to Participant (experiment DB)
+   - `email` (String): Participant email address
+   - `accessCode` (String): Copy of access code for reference
+   - `sessionsCompleted` (Int): Synced session count (for reminder logic)
+   - `lastReminderSent` (DateTime, nullable): Timestamp of last reminder
+   - `reminderCount` (Int): Total reminders sent
+   - `unsubscribedFromReminders` (Boolean): Opted out of emails only
+   - `withdrawnAt` (DateTime, nullable): Fully withdrawn from study
+   - `createdAt`, `updatedAt`: Timestamps
+
+7. **ReminderEligibility** (View): Computed view for reminder recommendations
+   - Joins RecruitmentRecord with calculated fields
+   - `daysSinceRegistration`: Days since createdAt
+   - `daysSinceLastReminder`: Days since lastReminderSent
+   - `recommendedReminder`: Enum (DAY_3, DAY_7, DAY_14, COMPLETE, WITHDRAWN, NONE)
+   - Logic:
+     - DAY_3: <2 sessions, 3+ days enrolled, 48+ hours since last reminder
+     - DAY_7: <4 sessions, 7+ days enrolled, 72+ hours since last reminder
+     - DAY_14: <6 sessions, 14+ days enrolled, 96+ hours since last reminder
+
+**Row Level Security**: Service role authentication required for all operations.
 
 ### Key Fields & Calculations
 

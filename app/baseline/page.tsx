@@ -171,7 +171,7 @@ export default function BaselineSurveyPage() {
                   {likertScale.map((option) => (
                     <label
                       key={option.value}
-                      className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
+                      className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors"
                     >
                       <input
                         type="radio"
@@ -262,7 +262,7 @@ export default function BaselineSurveyPage() {
                   {['yes', 'no'].map((option) => (
                     <label
                       key={option}
-                      className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
+                      className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors"
                     >
                       <input
                         type="radio"

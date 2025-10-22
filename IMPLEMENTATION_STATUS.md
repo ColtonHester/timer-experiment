@@ -1,6 +1,6 @@
 # Implementation Status
 
-Last updated: October 21, 2025
+Last updated: October 22, 2025
 
 ## ✅ Completed (Sprint 1)
 
@@ -71,31 +71,96 @@ Last updated: October 21, 2025
 - Enhanced `app/admin/page.tsx` - Full-featured admin dashboard
 
 ### Nice-to-Have (Deferred to Future Sprints)
-- [ ] "Send Reminder" button (manual trigger) - Sprint 3
 - [ ] Session completion timeline/heatmap - Future enhancement
 - [ ] Dropout rate calculation - Future enhancement
 
-## 📋 Next Up (Sprint 3 - Email Tracking & Reminders)
+## ✅ Completed (Sprint 3 - Email Tracking & Reminders)
+
+### Dual-Database Architecture
+- [x] Set up Supabase project for recruitment database (separate from experiment DB)
+- [x] Create recruitment DB schema with RLS policies
+- [x] Create experiment DB schema for production Supabase deployment
+- [x] Implement Row Level Security with service_role authentication
+
+### Backend Infrastructure
+- [x] Create `lib/supabase-recruitment.ts` - Supabase client and helper functions
+- [x] Create `lib/email-templates.tsx` - Three HTML email templates with UC Berkeley branding
+- [x] Build `/api/recruitment/sync` endpoint to sync emails after baseline
+- [x] Build `/api/recruitment/send-reminder` endpoint (supports individual and bulk)
+- [x] Build `/api/recruitment/unsubscribe` endpoint with two unsubscribe options
+- [x] Build `/api/admin/reminders/list` endpoint for reminder management UI
+- [x] Integrated Resend email service
+
+### Frontend Components
+- [x] Create `/app/admin/reminders/page.tsx` - Full reminder management UI
+  - Filter by reminder type (Day 3, 7, 14, All Active)
+  - Individual send functionality
+  - Bulk send with checkbox selection
+  - Participant table with masked emails
+  - Password protection
+- [x] Create `/app/unsubscribe/page.tsx` - Two-option unsubscribe landing page
+  - Stop reminders only (green card, recommended)
+  - Withdraw from study (red card, destructive)
+  - Success/error state handling
+
+### Email Templates
+- [x] Day 3 reminder: "Ready to continue your focus timer sessions?"
+- [x] Day 7 reminder: "You're halfway there!"
+- [x] Day 14 reminder: "Final push: Complete your focus timer study!"
+- [x] Responsive design with UC Berkeley branding (#003262 blue, #FDB515 gold)
+- [x] Plain text fallbacks for all templates
+- [x] Progress bars, access code display, unsubscribe links
+
+### Reminder Logic
+- [x] Day 3: <2 sessions completed, 3+ days enrolled
+- [x] Day 7: <4 sessions completed, 7+ days enrolled
+- [x] Day 14: <6 sessions completed, 14+ days enrolled
+- [x] Automatic 48-hour spacing between reminders
+- [x] Exclude unsubscribed and withdrawn participants
+- [x] Track reminder count and last sent timestamp
+
+### Integration Updates
+- [x] Updated `app/api/surveys/baseline/route.ts` - Email sync after participant creation
+- [x] Updated `app/api/admin/stats/route.ts` - Added recruitment statistics
+- [x] Updated `app/admin/page.tsx` - Added "Manage Reminders" button
+- [x] Updated `.env.example` - Comprehensive configuration sections
+
+### Bug Fixes (Sprint 3)
+- [x] Fixed dark mode hover on baseline survey (white-on-white text)
+- [x] Fixed Row Level Security error (switched from anon to service_role key)
+- [x] Fixed Supabase `.raw()` function error (manual increment instead)
+- [x] Resolved database connection issues with hybrid local/remote setup
+
+### Files Created in Sprint 3
+- `supabase/experiment-schema.sql` - Production database schema
+- `supabase/recruitment-schema.sql` - Recruitment database with RLS
+- `lib/supabase-recruitment.ts` - Supabase client and helpers
+- `lib/email-templates.tsx` - HTML email templates
+- `app/api/recruitment/sync/route.ts` - Email sync endpoint
+- `app/api/recruitment/send-reminder/route.ts` - Reminder sending endpoint
+- `app/api/recruitment/unsubscribe/route.ts` - Unsubscribe handling
+- `app/api/admin/reminders/list/route.ts` - List participants for reminders
+- `app/admin/reminders/page.tsx` - Reminder management UI
+- `app/unsubscribe/page.tsx` - Unsubscribe landing page
+- `SUPABASE_SETUP.md` - Complete Supabase setup guide
+- `RESEND_SETUP.md` - Complete Resend setup guide
+- `RECRUITMENT_GUIDE.md` - Participant management workflow guide
+
+### Files Modified in Sprint 3
+- `package.json` - Added resend and @supabase/supabase-js dependencies
+- `.env.example` - Added recruitment DB and email service configuration
+- `app/api/surveys/baseline/route.ts` - Email sync integration
+- `app/api/admin/stats/route.ts` - Recruitment statistics
+- `app/admin/page.tsx` - "Manage Reminders" button
+- `app/baseline/page.tsx` - Fixed dark mode hover states
+
+## 📋 Next Up (Sprint 4 - Deployment)
 
 ## 🔮 Future Sprints
 
-### Sprint 3: Email Tracking & Reminders
-- [ ] Set up Supabase project for recruitment database
-- [ ] Create recruitment DB schema (separate from experiment DB)
-- [ ] Build `/api/recruitment/sync` endpoint to sync emails
-- [ ] Create `/app/admin/reminders/page.tsx` for email management
-- [ ] Implement automated reminder cadence:
-  - Day 3: If <2 sessions completed
-  - Day 7: If <4 sessions completed
-  - Day 14: If <6 sessions completed
-- [ ] Email template design
-- [ ] SendGrid/Resend integration
-
 ### Sprint 4: Deployment
 - [ ] Write `DEPLOYMENT.md` guide
-- [ ] Write `RECRUITMENT.md` workflow guide
 - [ ] Set up Vercel project
-- [ ] Set up Supabase production database
 - [ ] Configure environment variables in Vercel
 - [ ] Test production deployment
 - [ ] Set up domain (if applicable)
@@ -107,10 +172,7 @@ None currently! 🎉
 
 ## Technical Debt
 
-- Email sending is not yet implemented (Sprint 3)
-- Admin dashboard doesn't exist yet (Sprint 2)
-- No automated reminders (Sprint 3)
-- Session pacing warnings not shown to participants (Sprint 2)
+None! All core functionality complete. 🚀
 
 ## Testing Checklist
 
@@ -121,13 +183,17 @@ None currently! 🎉
 - [x] Test both timer visualizations
 - [x] Verify data in Prisma Studio
 - [x] Test CSV export endpoint
+- [x] Admin dashboard (Sprint 2)
+- [x] Email reminder sending (Sprint 3)
+- [x] Unsubscribe flow with both options (Sprint 3)
+- [x] Dark mode consistency across all pages (Sprint 3)
+- [x] Bulk reminder sending (Sprint 3)
 
 ### To Be Tested
-- [ ] Admin dashboard (Sprint 2)
-- [ ] Email reminders (Sprint 3)
 - [ ] Production deployment (Sprint 4)
 - [ ] Mobile responsiveness (all sprints)
 - [ ] Cross-browser compatibility (all sprints)
+- [ ] Production email delivery (Sprint 4)
 
 ## Performance Metrics
 
@@ -139,11 +205,13 @@ None currently! 🎉
 ## Documentation Status
 
 - [x] `README.md` - Updated with access code system
-- [x] `CLAUDE.md` - Fully updated with Sprint 1 implementation
-- [x] `.env.example` - Up to date
-- [x] `IMPLEMENTATION_STATUS.md` - Created (this file!)
+- [x] `CLAUDE.md` - Updated through Sprint 3
+- [x] `.env.example` - Up to date with all services
+- [x] `IMPLEMENTATION_STATUS.md` - Updated through Sprint 3 (this file!)
+- [x] `SUPABASE_SETUP.md` - Complete setup guide (Sprint 3)
+- [x] `RESEND_SETUP.md` - Complete email service guide (Sprint 3)
+- [x] `RECRUITMENT_GUIDE.md` - Complete workflow guide (Sprint 3)
 - [ ] `DEPLOYMENT.md` - To be written in Sprint 4
-- [ ] `RECRUITMENT.md` - To be written in Sprint 4
 
 ---
 
@@ -162,7 +230,12 @@ None currently! 🎉
 5. PostTreatmentSurvey
 
 ### Environment Variables
-- `DATABASE_URL` - PostgreSQL connection string
+- `DATABASE_URL` - PostgreSQL connection string (experiment data)
+- `SUPABASE_RECRUITMENT_URL` - Supabase project URL (recruitment data)
+- `SUPABASE_RECRUITMENT_SERVICE_KEY` - Supabase service_role key (not anon!)
+- `RESEND_API_KEY` - Resend email service API key
+- `RECRUITMENT_FROM_EMAIL` - Sender email address (e.g., mids-study@resend.dev)
+- `RECRUITMENT_FROM_NAME` - Sender display name (e.g., "DATASCI 241 Research Team")
 - `NEXT_PUBLIC_APP_URL` - App URL (default: http://localhost:3000)
 - `ADMIN_PASSWORD` - Admin endpoint password (default: changeme)
 

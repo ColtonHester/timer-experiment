@@ -57,6 +57,27 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // Sync email to recruitment database (non-blocking)
+    if (email) {
+      try {
+        await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/recruitment/sync`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            participantId: participant.id,
+            email,
+            accessCode: participant.accessCode,
+          }),
+        })
+      } catch (syncError) {
+        // Don't fail the baseline submission if email sync fails
+        console.error('Warning: Failed to sync email to recruitment database:', syncError)
+        // Continue - participant can still complete study
+      }
+    }
+
     return NextResponse.json({
       participantId: participant.id,
       accessCode: participant.accessCode, // Return access code to user
