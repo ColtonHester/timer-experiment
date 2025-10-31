@@ -29,6 +29,25 @@ export default function RemindersPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [sending, setSending] = useState(false)
 
+  // Check for stored password on mount
+  useEffect(() => {
+    const storedPassword = sessionStorage.getItem('adminPassword')
+    if (storedPassword) {
+      setPassword(storedPassword)
+      // Auto-authenticate with stored password
+      fetch(`/api/admin/reminders/list?password=${encodeURIComponent(storedPassword)}`)
+        .then(res => res.ok ? res.json() : Promise.reject())
+        .then(data => {
+          setParticipants(data.participants || [])
+          setAuthenticated(true)
+        })
+        .catch(() => {
+          // Invalid stored password, clear it
+          sessionStorage.removeItem('adminPassword')
+        })
+    }
+  }, [])
+
   const handleAuth = async () => {
     setLoading(true)
     try {
@@ -38,6 +57,8 @@ export default function RemindersPage() {
         const data = await response.json()
         setParticipants(data.participants || [])
         setAuthenticated(true)
+        // Store password in sessionStorage
+        sessionStorage.setItem('adminPassword', password)
       } else {
         alert('Invalid password')
       }

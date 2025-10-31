@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { calculateDuration, isSessionComplete, calculateOverrun } from '@/lib/utils'
+import { updateSessionCount } from '@/lib/supabase-recruitment'
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,6 +50,17 @@ export async function POST(request: NextRequest) {
         overrunAmount,
       },
     })
+
+    // Sync session count to recruitment database (non-blocking)
+    try {
+      const totalSessions = await prisma.session.count({
+        where: { participantId: session.participantId },
+      })
+      await updateSessionCount(session.participantId, totalSessions)
+    } catch (syncError) {
+      console.error('Warning: Failed to sync session count to recruitment DB:', syncError)
+      // Continue - main session data is saved
+    }
 
     return NextResponse.json({
       sessionId: updatedSession.id,

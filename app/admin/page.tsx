@@ -41,6 +41,25 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false)
   const [stats, setStats] = useState<StatsData | null>(null)
 
+  // Check for stored password on mount
+  useEffect(() => {
+    const storedPassword = sessionStorage.getItem('adminPassword')
+    if (storedPassword) {
+      setPassword(storedPassword)
+      // Auto-authenticate with stored password
+      fetch(`/api/admin/stats?password=${encodeURIComponent(storedPassword)}`)
+        .then(res => res.ok ? res.json() : Promise.reject())
+        .then(data => {
+          setStats(data)
+          setAuthenticated(true)
+        })
+        .catch(() => {
+          // Invalid stored password, clear it
+          sessionStorage.removeItem('adminPassword')
+        })
+    }
+  }, [])
+
   const handleAuth = async () => {
     setLoading(true)
     try {
@@ -49,6 +68,8 @@ export default function AdminPage() {
         const data = await response.json()
         setStats(data)
         setAuthenticated(true)
+        // Store password in sessionStorage
+        sessionStorage.setItem('adminPassword', password)
       } else {
         alert('Invalid password')
       }

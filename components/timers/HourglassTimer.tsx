@@ -17,39 +17,40 @@ export default function HourglassTimer({
   const [remainingSeconds, setRemainingSeconds] = useState(durationSeconds)
   const [isRunning, setIsRunning] = useState(true)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const startTimeRef = useRef<number>(Date.now())
 
   useEffect(() => {
     if (!isRunning) return
 
+    // Use timestamp-based timing to handle inactive tabs
     intervalRef.current = setInterval(() => {
-      setRemainingSeconds((prev) => {
-        const next = prev - 1
+      const now = Date.now()
+      const elapsed = Math.floor((now - startTimeRef.current) / 1000)
+      const remaining = Math.max(0, durationSeconds - elapsed)
 
-        // Call onTick callback
-        if (onTick) {
-          onTick(next)
+      setRemainingSeconds(remaining)
+
+      // Call onTick callback
+      if (onTick) {
+        onTick(remaining)
+      }
+
+      // Check if timer is complete
+      if (remaining <= 0) {
+        setIsRunning(false)
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current)
         }
-
-        // Check if timer is complete
-        if (next <= 0) {
-          setIsRunning(false)
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current)
-          }
-          onComplete()
-          return 0
-        }
-
-        return next
-      })
-    }, 1000)
+        onComplete()
+      }
+    }, 100) // Check every 100ms for smoother updates
 
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
       }
     }
-  }, [isRunning, onComplete, onTick])
+  }, [isRunning, onComplete, onTick, durationSeconds])
 
   // Calculate progress (0 = full, 100 = empty)
   const progress = ((durationSeconds - remainingSeconds) / durationSeconds) * 100
