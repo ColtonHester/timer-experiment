@@ -64,19 +64,19 @@ function UnsubscribeContent() {
   // Show error if no participant ID
   if (!participantId) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-900">
         <Card className="max-w-md w-full">
           <CardHeader>
-            <div className="flex items-center gap-2 text-red-600">
+            <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
               <AlertTriangle className="w-6 h-6" />
-              <CardTitle>Invalid Link</CardTitle>
+              <CardTitle className="text-gray-900 dark:text-white">Invalid Link</CardTitle>
             </div>
-            <CardDescription>
+            <CardDescription className="text-gray-600 dark:text-gray-400">
               This unsubscribe link is invalid or has expired.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               If you need assistance, please contact the research team at datasci241@berkeley.edu
             </p>
           </CardContent>
@@ -88,14 +88,14 @@ function UnsubscribeContent() {
   // Show result after action
   if (result) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-900">
         <Card className="max-w-md w-full">
           <CardHeader>
-            <div className={`flex items-center gap-2 ${result.success ? 'text-green-600' : 'text-red-600'}`}>
+            <div className={`flex items-center gap-2 ${result.success ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
               {result.success ? <CheckCircle2 className="w-6 h-6" /> : <AlertTriangle className="w-6 h-6" />}
-              <CardTitle>{result.success ? 'Confirmed' : 'Error'}</CardTitle>
+              <CardTitle className="text-gray-900 dark:text-white">{result.success ? 'Confirmed' : 'Error'}</CardTitle>
             </div>
-            <CardDescription>
+            <CardDescription className="text-gray-600 dark:text-gray-400">
               {result.message}
             </CardDescription>
           </CardHeader>
@@ -134,27 +134,27 @@ function UnsubscribeContent() {
 
   // Show unsubscribe options
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-900">
       <Card className="max-w-2xl w-full">
         <CardHeader>
-          <CardTitle className="text-2xl">Email Preferences</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl text-gray-900 dark:text-white">Email Preferences</CardTitle>
+          <CardDescription className="text-gray-600 dark:text-gray-400">
             UC Berkeley DATASCI 241 - Focus Timer Study
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <p className="text-muted-foreground">
+          <p className="text-gray-600 dark:text-gray-400">
             We're sorry to see you go! Please choose how you'd like to proceed:
           </p>
 
           {/* Option 1: Stop Reminders Only */}
-          <Card className="border-2 hover:border-green-500 transition-colors">
+          <Card className="border-2 border-gray-200 dark:border-gray-700 hover:border-green-500 dark:hover:border-green-600 transition-colors">
             <CardHeader>
               <div className="flex items-start gap-3">
-                <Mail className="w-6 h-6 text-green-600 mt-1" />
+                <Mail className="w-6 h-6 text-green-600 dark:text-green-400 mt-1 flex-shrink-0" />
                 <div className="flex-1">
-                  <CardTitle className="text-lg">Stop Reminder Emails Only</CardTitle>
-                  <CardDescription className="mt-2">
+                  <CardTitle className="text-lg text-gray-900 dark:text-white">Stop Reminder Emails Only</CardTitle>
+                  <CardDescription className="mt-2 text-gray-600 dark:text-gray-400">
                     You'll stop receiving reminder emails, but you can still complete your study sessions using your access code.
                   </CardDescription>
                 </div>
@@ -169,7 +169,7 @@ function UnsubscribeContent() {
               <Button
                 onClick={() => handleUnsubscribe('reminders')}
                 disabled={loading}
-                className="w-full bg-green-600 hover:bg-green-700"
+                className="w-full bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white"
               >
                 {loading ? 'Processing...' : 'Stop Emails, Keep Study Access'}
               </Button>
@@ -177,13 +177,13 @@ function UnsubscribeContent() {
           </Card>
 
           {/* Option 2: Withdraw Completely */}
-          <Card className="border-2 hover:border-red-500 transition-colors">
+          <Card className="border-2 border-gray-200 dark:border-gray-700 hover:border-red-500 dark:hover:border-red-600 transition-colors">
             <CardHeader>
               <div className="flex items-start gap-3">
-                <LogOut className="w-6 h-6 text-red-600 mt-1" />
+                <LogOut className="w-6 h-6 text-red-600 dark:text-red-400 mt-1 flex-shrink-0" />
                 <div className="flex-1">
-                  <CardTitle className="text-lg">Withdraw from Study</CardTitle>
-                  <CardDescription className="mt-2">
+                  <CardTitle className="text-lg text-gray-900 dark:text-white">Withdraw from Study</CardTitle>
+                  <CardDescription className="mt-2 text-gray-600 dark:text-gray-400">
                     You'll be removed from the study completely. You won't receive emails and won't be able to complete more sessions.
                   </CardDescription>
                 </div>
@@ -206,7 +206,7 @@ function UnsubscribeContent() {
             </CardContent>
           </Card>
 
-          <div className="text-center text-sm text-muted-foreground pt-4 border-t">
+          <div className="text-center text-sm text-gray-600 dark:text-gray-400 pt-4 border-t border-gray-200 dark:border-gray-700">
             <p>
               Questions? Contact us at{' '}
               <a href="mailto:datasci241@berkeley.edu" className="text-primary hover:underline">
