@@ -20,7 +20,7 @@ export interface RecruitmentRecord {
 export interface ReminderEligibility extends RecruitmentRecord {
   daysSinceRegistration: number
   daysSinceLastReminder: number | null
-  recommendedReminder: 'DAY_3' | 'DAY_7' | 'DAY_14' | 'COMPLETE' | 'WITHDRAWN' | 'UNSUBSCRIBED' | 'NONE'
+  recommendedReminder: 'DAY_2' | 'DAY_5' | 'COMPLETE' | 'WITHDRAWN' | 'UNSUBSCRIBED' | 'NONE'
 }
 
 // Database interface for type safety
@@ -44,6 +44,25 @@ export const supabaseRecruitment = createClient(supabaseUrl, supabaseKey)
 // Helper functions for common operations
 
 /**
+ * Check if an email already exists in the recruitment database
+ */
+export async function checkEmailExists(email: string): Promise<boolean> {
+  const { data, error } = await supabaseRecruitment
+    .from('RecruitmentRecord')
+    .select('email')
+    .eq('email', email.toLowerCase().trim())
+    .maybeSingle()
+
+  if (error && error.code !== 'PGRST116') {
+    // PGRST116 is "no rows returned", which is fine
+    console.error('Error checking email existence:', error)
+    throw error
+  }
+
+  return data !== null
+}
+
+/**
  * Create a new recruitment record (called when participant completes baseline)
  */
 export async function createRecruitmentRecord(data: {
@@ -51,11 +70,19 @@ export async function createRecruitmentRecord(data: {
   email: string
   accessCode: string
 }) {
+  // Check for duplicate email first
+  const normalizedEmail = data.email.toLowerCase().trim()
+  const emailExists = await checkEmailExists(normalizedEmail)
+
+  if (emailExists) {
+    throw new Error(`DUPLICATE_EMAIL: This email address (${data.email}) has already been used for this study. Each participant can only register once. If you believe this is an error, please contact the research team.`)
+  }
+
   const { data: record, error } = await supabaseRecruitment
     .from('RecruitmentRecord')
     .insert({
       participantId: data.participantId,
-      email: data.email.toLowerCase().trim(),
+      email: normalizedEmail,
       accessCode: data.accessCode,
     })
     .select()
@@ -63,6 +90,10 @@ export async function createRecruitmentRecord(data: {
 
   if (error) {
     console.error('Error creating recruitment record:', error)
+    // Check if it's a unique constraint violation (PostgreSQL error code 23505)
+    if (error.code === '23505' && error.message?.includes('email')) {
+      throw new Error(`DUPLICATE_EMAIL: This email address has already been used for this study. Each participant can only register once.`)
+    }
     throw error
   }
 
@@ -88,7 +119,7 @@ export async function updateSessionCount(participantId: string, sessionCount: nu
  * Get reminder eligibility view for all participants
  */
 export async function getReminderEligibility(filter?: {
-  reminderType?: 'DAY_3' | 'DAY_7' | 'DAY_14'
+  reminderType?: 'DAY_2' | 'DAY_5'
   excludeComplete?: boolean
   excludeWithdrawn?: boolean
 }) {

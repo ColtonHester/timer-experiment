@@ -24,6 +24,7 @@ export default function RemindersPage() {
   const [password, setPassword] = useState('')
   const [authenticated, setAuthenticated] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [loadingAuth, setLoadingAuth] = useState(true) // Loading state for auto-auth check
   const [participants, setParticipants] = useState<ReminderParticipant[]>([])
   const [filter, setFilter] = useState<FilterType>('all')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -45,6 +46,12 @@ export default function RemindersPage() {
           // Invalid stored password, clear it
           sessionStorage.removeItem('adminPassword')
         })
+        .finally(() => {
+          setLoadingAuth(false)
+        })
+    } else {
+      // No stored password
+      setLoadingAuth(false)
     }
   }, [])
 
@@ -153,6 +160,18 @@ export default function RemindersPage() {
     DAY_3: participants.filter(p => p.recommendedReminder === 'DAY_3').length,
     DAY_7: participants.filter(p => p.recommendedReminder === 'DAY_7').length,
     DAY_14: participants.filter(p => p.recommendedReminder === 'DAY_14').length,
+  }
+
+  // Show loading spinner while checking for stored auth
+  if (loadingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-gray-600 dark:text-gray-400">Checking authentication...</p>
+        </div>
+      </div>
+    )
   }
 
   if (!authenticated) {

@@ -11,7 +11,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE "RecruitmentRecord" (
     "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     "participantId" UUID NOT NULL UNIQUE, -- Links to Participant.id in experiment DB
-    "email" TEXT NOT NULL,
+    "email" TEXT NOT NULL UNIQUE, -- Ensure one email per participant (prevent duplicates)
     "accessCode" TEXT NOT NULL, -- Duplicated for convenience (from Participant table)
 
     -- Tracking fields
@@ -118,10 +118,9 @@ SELECT
     CASE
         WHEN "withdrawnAt" IS NOT NULL THEN 'WITHDRAWN'
         WHEN "unsubscribedFromReminders" = true THEN 'UNSUBSCRIBED'
-        WHEN "sessionsCompleted" >= 8 THEN 'COMPLETE'
-        WHEN "sessionsCompleted" < 2 AND EXTRACT(DAY FROM (NOW() - "createdAt")) >= 3 AND ("lastReminderSent" IS NULL OR "lastReminderSent" < NOW() - INTERVAL '2 days') THEN 'DAY_3'
-        WHEN "sessionsCompleted" < 4 AND EXTRACT(DAY FROM (NOW() - "createdAt")) >= 7 AND ("lastReminderSent" IS NULL OR "lastReminderSent" < NOW() - INTERVAL '3 days') THEN 'DAY_7'
-        WHEN "sessionsCompleted" < 6 AND EXTRACT(DAY FROM (NOW() - "createdAt")) >= 14 AND ("lastReminderSent" IS NULL OR "lastReminderSent" < NOW() - INTERVAL '4 days') THEN 'DAY_14'
+        WHEN "sessionsCompleted" >= 2 THEN 'COMPLETE'
+        WHEN "sessionsCompleted" = 0 AND EXTRACT(DAY FROM (NOW() - "createdAt")) >= 2 AND ("lastReminderSent" IS NULL OR "lastReminderSent" < NOW() - INTERVAL '1 day') THEN 'DAY_2'
+        WHEN "sessionsCompleted" = 1 AND EXTRACT(DAY FROM (NOW() - "createdAt")) >= 5 AND ("lastReminderSent" IS NULL OR "lastReminderSent" < NOW() - INTERVAL '2 days') THEN 'DAY_5'
         ELSE 'NONE'
     END AS "recommendedReminder"
 FROM "RecruitmentRecord";

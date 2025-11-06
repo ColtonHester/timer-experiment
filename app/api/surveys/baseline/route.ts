@@ -29,8 +29,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate randomized session sequence (8 sessions by default)
-    const sequence = generateSessionSequence({ totalSessions: 8 })
+    // Generate randomized session sequence (2 sessions by default)
+    const sequence = generateSessionSequence({ totalSessions: 2 })
 
     // Generate unique access code for participant persistence
     const accessCode = await generateUniqueAccessCode()
@@ -57,10 +57,11 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Sync email to recruitment database (non-blocking)
+    // Sync email to recruitment database and send welcome email
     if (email) {
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/recruitment/sync`, {
+        // Sync email to recruitment database
+        const syncResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/recruitment/sync`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -71,9 +72,43 @@ export async function POST(request: NextRequest) {
             accessCode: participant.accessCode,
           }),
         })
+
+        // Check if email sync failed due to duplicate
+        if (syncResponse.status === 409) {
+          const errorData = await syncResponse.json()
+          // Delete the participant we just created since email is duplicate
+          await prisma.participant.delete({
+            where: { id: participant.id }
+          })
+          return NextResponse.json(
+            {
+              error: 'DUPLICATE_EMAIL',
+              message: errorData.message || 'This email address has already been used for this study.'
+            },
+            { status: 409 }
+          )
+        }
+
+        // Send welcome email with access code (non-blocking - don't fail if this errors)
+        try {
+          await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/recruitment/send-welcome`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              participantId: participant.id,
+              email,
+              accessCode: participant.accessCode,
+            }),
+          })
+        } catch (emailError) {
+          // Don't fail baseline if welcome email fails
+          console.error('Warning: Failed to send welcome email:', emailError)
+        }
       } catch (syncError) {
-        // Don't fail the baseline submission if email sync fails
-        console.error('Warning: Failed to sync email to recruitment database:', syncError)
+        // Don't fail the baseline submission if sync has network errors
+        console.error('Warning: Failed to sync email:', syncError)
         // Continue - participant can still complete study
       }
     }

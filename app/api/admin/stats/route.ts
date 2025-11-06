@@ -28,10 +28,8 @@ export async function GET(request: NextRequest) {
     // Calculate participation rate buckets
     const participationBuckets = {
       '0': 0,
-      '1-2': 0,
-      '3-4': 0,
-      '5-6': 0,
-      '7-8': 0,
+      '1': 0,
+      '2': 0,
     }
 
     // Build participant list with session pacing warnings
@@ -44,10 +42,8 @@ export async function GET(request: NextRequest) {
 
       // Update participation buckets
       if (sessionCount === 0) participationBuckets['0']++
-      else if (sessionCount <= 2) participationBuckets['1-2']++
-      else if (sessionCount <= 4) participationBuckets['3-4']++
-      else if (sessionCount <= 6) participationBuckets['5-6']++
-      else participationBuckets['7-8']++
+      else if (sessionCount === 1) participationBuckets['1']++
+      else participationBuckets['2']++
 
       // Check for session pacing warning (>2 sessions in last 24 hours)
       const last24Hours = Date.now() - 24 * 60 * 60 * 1000
@@ -59,7 +55,7 @@ export async function GET(request: NextRequest) {
       return {
         accessCodeLast4: p.accessCode.slice(-4), // Only last 4 chars for privacy
         sessionsCompleted: sessionCount,
-        totalSessions: 8,
+        totalSessions: 2,
         lastActiveAt: lastSession?.startTime.toISOString() || null,
         daysSinceRegistration,
         hasPacingWarning,

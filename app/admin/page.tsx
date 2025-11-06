@@ -26,10 +26,8 @@ interface StatsData {
   }
   participationRate: {
     '0': number
-    '1-2': number
-    '3-4': number
-    '5-6': number
-    '7-8': number
+    '1': number
+    '2': number
   }
   participants: ParticipantData[]
   lastUpdated: string
@@ -39,6 +37,7 @@ export default function AdminPage() {
   const [password, setPassword] = useState('')
   const [authenticated, setAuthenticated] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [loadingAuth, setLoadingAuth] = useState(true) // Loading state for auto-auth check
   const [stats, setStats] = useState<StatsData | null>(null)
 
   // Check for stored password on mount
@@ -57,6 +56,12 @@ export default function AdminPage() {
           // Invalid stored password, clear it
           sessionStorage.removeItem('adminPassword')
         })
+        .finally(() => {
+          setLoadingAuth(false)
+        })
+    } else {
+      // No stored password
+      setLoadingAuth(false)
     }
   }, [])
 
@@ -89,6 +94,18 @@ export default function AdminPage() {
   const handleDownload = async (format: string) => {
     const url = `/api/admin/export?password=${password}&format=${format}`
     window.open(url, '_blank')
+  }
+
+  // Show loading spinner while checking for stored auth
+  if (loadingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-gray-600 dark:text-gray-400">Checking authentication...</p>
+        </div>
+      </div>
+    )
   }
 
   if (!authenticated) {
@@ -142,10 +159,8 @@ export default function AdminPage() {
 
   const participationData = [
     { label: '0 sessions', count: stats.participationRate['0'], color: 'bg-red-500' },
-    { label: '1-2 sessions', count: stats.participationRate['1-2'], color: 'bg-orange-500' },
-    { label: '3-4 sessions', count: stats.participationRate['3-4'], color: 'bg-yellow-500' },
-    { label: '5-6 sessions', count: stats.participationRate['5-6'], color: 'bg-blue-500' },
-    { label: '7-8 sessions', count: stats.participationRate['7-8'], color: 'bg-green-500' },
+    { label: '1 session', count: stats.participationRate['1'], color: 'bg-yellow-500' },
+    { label: '2 sessions', count: stats.participationRate['2'], color: 'bg-green-500' },
   ]
 
   const maxCount = Math.max(...participationData.map(d => d.count), 1)
@@ -317,7 +332,7 @@ export default function AdminPage() {
                               <span>High pace</span>
                             </div>
                           )}
-                          {participant.sessionsCompleted === 8 && !participant.hasPacingWarning && (
+                          {participant.sessionsCompleted === 2 && !participant.hasPacingWarning && (
                             <span className="text-green-600 text-sm font-medium">Complete</span>
                           )}
                         </td>

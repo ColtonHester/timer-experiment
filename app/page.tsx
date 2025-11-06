@@ -55,7 +55,7 @@ export default function HomePage() {
                 <div>
                   <p className="font-semibold text-sm">Time Commitment</p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    At least 8 focus sessions over several days
+                    2 focus sessions when convenient
                   </p>
                 </div>
               </div>

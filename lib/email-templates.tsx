@@ -1,7 +1,7 @@
 // Email Templates for Focus Timer Study
 // UC Berkeley DATASCI 241 - Participant Reminder Emails
 
-export type ReminderType = 'day3' | 'day7' | 'day14'
+export type ReminderType = 'welcome' | 'day2' | 'day5'
 
 interface EmailData {
   email: string
@@ -172,11 +172,148 @@ function getBaseTemplate(content: string): string {
 }
 
 /**
+ * Welcome Email - Sent immediately after baseline survey
+ * Confirms registration and provides access code
+ */
+export function getWelcomeEmail(data: EmailData): { html: string; text: string; subject: string } {
+  const resumeUrl = `${process.env.NEXT_PUBLIC_APP_URL}/resume?code=${data.accessCode}`
+  const unsubscribeUrl = `${process.env.NEXT_PUBLIC_APP_URL}/unsubscribe?participantId=${data.participantId}`
+
+  const html = getBaseTemplate(`
+    <div class="header">
+      <h1 class="header-title">Welcome to the Study! 🎓</h1>
+      <p class="header-subtitle">UC BERKELEY · DATASCI 241 · FOCUS TIMER STUDY</p>
+    </div>
+
+    <div class="content">
+      <p>Hi there,</p>
+
+      <p style="font-size: 18px; color: ${COLORS.berkeleyBlue}; font-weight: 600;">
+        Thank you for joining our focus timer visualization study! 🎉
+      </p>
+
+      <p>Your registration is complete. You're all set to begin your 2 focus sessions. Each session is a 25-minute focused work period using one of two different timer visualizations.</p>
+
+      <div style="background-color: #E6F7FF; border-left: 4px solid ${COLORS.foundersRock}; padding: 20px; margin: 24px 0; border-radius: 4px;">
+        <p style="margin: 0; color: ${COLORS.berkeleyBlue}; font-weight: 600;">
+          📋 What to Expect
+        </p>
+        <p style="margin: 12px 0 0 0; font-size: 14px;">
+          • <strong>2 sessions total</strong> - Each 25 minutes long<br>
+          • <strong>Different timer visualizations</strong> - You'll experience both styles<br>
+          • <strong>Brief surveys</strong> - Quick feedback after each session<br>
+          • <strong>Flexible timing</strong> - Complete sessions when it works for you
+        </p>
+      </div>
+
+      <div class="access-code-box">
+        <p style="margin: 0 0 8px 0; font-size: 14px; color: ${COLORS.darkGray};">
+          <strong>🔑 Your Access Code (Save This!):</strong>
+        </p>
+        <div class="access-code">${data.accessCode}</div>
+        <p style="margin: 12px 0 0 0; font-size: 12px; color: #666;">
+          Use this code to resume your sessions on any device. We recommend bookmarking the link below!
+        </p>
+      </div>
+
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${resumeUrl}" class="cta-button">Start My First Session →</a>
+      </div>
+
+      <div style="background-color: ${COLORS.lightGray}; padding: 20px; margin: 24px 0; border-radius: 4px;">
+        <p style="margin: 0 0 12px 0; font-size: 14px; color: ${COLORS.berkeleyBlue}; font-weight: 600;">
+          💡 Quick Tips
+        </p>
+        <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #666;">
+          <li>Find a quiet space for your focus sessions</li>
+          <li>Have a task ready to work on (studying, coding, writing, etc.)</li>
+          <li>Complete both sessions when you have time</li>
+          <li>Your access code works on any device - mobile or desktop</li>
+        </ul>
+      </div>
+
+      <p style="margin-top: 32px;">Your participation helps us understand how timer design affects focus and productivity. Thank you for contributing to this research! 🙏</p>
+
+      <p style="margin-top: 24px; font-size: 14px; color: #666;">
+        Questions? Feel free to reach out.<br><br>
+        Best regards,<br>
+        <strong>DATASCI 241 Research Team</strong><br>
+        UC Berkeley School of Information
+      </p>
+    </div>
+
+    <div class="footer">
+      <p style="margin: 0 0 10px 0;">
+        <strong>UC Berkeley MIDS · DATASCI 241</strong><br>
+        Focus Timer Visualization Study
+      </p>
+
+      <div class="unsubscribe-section">
+        <p style="margin: 0 0 10px 0;">
+          <a href="${unsubscribeUrl}">Manage email preferences</a>
+        </p>
+        <p style="margin: 0; font-size: 11px;">
+          This email was sent to ${data.email} as part of your participation in the focus timer study.
+        </p>
+      </div>
+    </div>
+  `)
+
+  const text = `
+UC Berkeley DATASCI 241 - Focus Timer Study
+
+Welcome to the Study!
+
+Hi there,
+
+Thank you for joining our focus timer visualization study!
+
+Your registration is complete. You're all set to begin your 2 focus sessions. Each session is a 25-minute focused work period using one of two different timer visualizations.
+
+WHAT TO EXPECT:
+• 2 sessions total - Each 25 minutes long
+• Different timer visualizations - You'll experience both styles
+• Brief surveys - Quick feedback after each session
+• Flexible timing - Complete sessions when it works for you
+
+YOUR ACCESS CODE (Save This!):
+${data.accessCode}
+
+Use this code to resume your sessions on any device.
+
+Start your first session: ${resumeUrl}
+
+QUICK TIPS:
+• Find a quiet space for your focus sessions
+• Have a task ready to work on (studying, coding, writing, etc.)
+• Complete both sessions when you have time
+• Your access code works on any device - mobile or desktop
+
+Your participation helps us understand how timer design affects focus and productivity. Thank you for contributing to this research!
+
+Questions? Feel free to reach out.
+
+Best regards,
+DATASCI 241 Research Team
+UC Berkeley School of Information
+
+---
+Manage email preferences: ${unsubscribeUrl}
+  `.trim()
+
+  return {
+    html,
+    text,
+    subject: 'Welcome to the Focus Timer Study - Your Access Code Inside! 🎓',
+  }
+}
+
+/**
  * Day 3 Reminder - Getting Started
  * For participants with <2 sessions completed, 3+ days enrolled
  */
 export function getDay3Email(data: EmailData): { html: string; text: string; subject: string } {
-  const progressPercent = (data.sessionsCompleted / 8) * 100
+  const progressPercent = (data.sessionsCompleted / 2) * 100
   const resumeUrl = `${process.env.NEXT_PUBLIC_APP_URL}/resume?code=${data.accessCode}`
   const unsubscribeUrl = `${process.env.NEXT_PUBLIC_APP_URL}/unsubscribe?participantId=${data.participantId}`
 
@@ -191,7 +328,7 @@ export function getDay3Email(data: EmailData): { html: string; text: string; sub
 
       <p>Thank you for joining our focus timer study! We noticed you signed up ${data.daysSinceRegistration} ${data.daysSinceRegistration === 1 ? 'day' : 'days'} ago and wanted to check in.</p>
 
-      <p>You're off to a great start with <strong>${data.sessionsCompleted} of 8 sessions</strong> completed! We'd love to see you continue your participation when you have time.</p>
+      <p>You're off to a great start with <strong>${data.sessionsCompleted} of 2 sessions</strong> completed! We'd love to see you continue your participation when you have time.</p>
 
       <div class="progress-bar">
         <div class="progress-fill" style="width: ${progressPercent}%;"></div>
@@ -252,7 +389,7 @@ Hi there,
 
 Thank you for joining our focus timer study! We noticed you signed up ${data.daysSinceRegistration} ${data.daysSinceRegistration === 1 ? 'day' : 'days'} ago and wanted to check in.
 
-You're off to a great start with ${data.sessionsCompleted} of 8 sessions completed! We'd love to see you continue your participation when you have time.
+You're off to a great start with ${data.sessionsCompleted} of 2 sessions completed! We'd love to see you continue your participation when you have time.
 
 Each session takes just 25 minutes. Your contribution helps us understand how different timer visualizations affect focus and productivity.
 
@@ -282,8 +419,8 @@ Manage email preferences: ${unsubscribeUrl}
  * For participants with <4 sessions completed, 7+ days enrolled
  */
 export function getDay7Email(data: EmailData): { html: string; text: string; subject: string } {
-  const progressPercent = (data.sessionsCompleted / 8) * 100
-  const remainingSessions = 8 - data.sessionsCompleted
+  const progressPercent = (data.sessionsCompleted / 2) * 100
+  const remainingSessions = 2 - data.sessionsCompleted
   const resumeUrl = `${process.env.NEXT_PUBLIC_APP_URL}/resume?code=${data.accessCode}`
   const unsubscribeUrl = `${process.env.NEXT_PUBLIC_APP_URL}/unsubscribe?participantId=${data.participantId}`
 
@@ -297,7 +434,7 @@ export function getDay7Email(data: EmailData): { html: string; text: string; sub
       <p>Hi there,</p>
 
       <p style="font-size: 18px; color: ${COLORS.berkeleyBlue}; font-weight: 600;">
-        Great progress! You've completed ${data.sessionsCompleted} of 8 sessions! 🎉
+        Great progress! You've completed ${data.sessionsCompleted} of 2 sessions! 🎉
       </p>
 
       <div class="progress-bar">
@@ -361,7 +498,7 @@ You're Halfway There!
 
 Hi there,
 
-Great progress! You've completed ${data.sessionsCompleted} of 8 sessions!
+Great progress! You've completed ${data.sessionsCompleted} of 2 sessions!
 
 You're ${progressPercent.toFixed(0)}% of the way through the study. Just ${remainingSessions} more ${remainingSessions === 1 ? 'session' : 'sessions'} to go!
 
@@ -395,8 +532,8 @@ Manage email preferences: ${unsubscribeUrl}
  * For participants with <6 sessions completed, 14+ days enrolled
  */
 export function getDay14Email(data: EmailData): { html: string; text: string; subject: string } {
-  const progressPercent = (data.sessionsCompleted / 8) * 100
-  const remainingSessions = 8 - data.sessionsCompleted
+  const progressPercent = (data.sessionsCompleted / 2) * 100
+  const remainingSessions = 2 - data.sessionsCompleted
   const resumeUrl = `${process.env.NEXT_PUBLIC_APP_URL}/resume?code=${data.accessCode}`
   const unsubscribeUrl = `${process.env.NEXT_PUBLIC_APP_URL}/unsubscribe?participantId=${data.participantId}`
 
@@ -417,14 +554,14 @@ export function getDay14Email(data: EmailData): { html: string; text: string; su
         <div class="progress-fill" style="width: ${progressPercent}%;"></div>
       </div>
 
-      <p>You've already completed <strong>${data.sessionsCompleted} of 8 sessions</strong> - that's ${progressPercent.toFixed(0)}% complete! Your participation has been incredibly valuable to our research.</p>
+      <p>You've already completed <strong>${data.sessionsCompleted} of 2 sessions</strong> - that's ${progressPercent.toFixed(0)}% complete! Your participation has been incredibly valuable to our research.</p>
 
       <div style="background-color: #E6F7FF; border-left: 4px solid ${COLORS.foundersRock}; padding: 20px; margin: 24px 0; border-radius: 4px;">
         <p style="margin: 0; color: ${COLORS.berkeleyBlue}; font-weight: 600;">
           🎓 Your Impact
         </p>
         <p style="margin: 12px 0 0 0; font-size: 14px;">
-          Completing all 8 sessions ensures we have complete data for statistical analysis. Your full participation directly contributes to understanding how interface design affects human focus and productivity.
+          Completing all 2 sessions ensures we have complete data for statistical analysis. Your full participation directly contributes to understanding how interface design affects human focus and productivity.
         </p>
       </div>
 
@@ -478,10 +615,10 @@ Hi there,
 
 You're in the home stretch! Just ${remainingSessions} more ${remainingSessions === 1 ? 'session' : 'sessions'} to complete the study!
 
-You've already completed ${data.sessionsCompleted} of 8 sessions - that's ${progressPercent.toFixed(0)}% complete! Your participation has been incredibly valuable to our research.
+You've already completed ${data.sessionsCompleted} of 2 sessions - that's ${progressPercent.toFixed(0)}% complete! Your participation has been incredibly valuable to our research.
 
 Your Impact:
-Completing all 8 sessions ensures we have complete data for statistical analysis. Your full participation directly contributes to understanding how interface design affects human focus and productivity.
+Completing all 2 sessions ensures we have complete data for statistical analysis. Your full participation directly contributes to understanding how interface design affects human focus and productivity.
 
 Finish strong - it only takes ${remainingSessions * 25} more minutes total!
 
@@ -511,6 +648,8 @@ Manage email preferences: ${unsubscribeUrl}
  */
 export function getEmailTemplate(reminderType: ReminderType, data: EmailData) {
   switch (reminderType) {
+    case 'welcome':
+      return getWelcomeEmail(data)
     case 'day3':
       return getDay3Email(data)
     case 'day7':

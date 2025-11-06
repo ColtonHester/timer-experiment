@@ -38,7 +38,7 @@ export default function ConsentPage() {
               <p>
                 This study investigates whether timer visualization (precise countdown vs.
                 approximate hourglass) affects sustained focus duration during work sessions.
-                You will complete at least 8 focus sessions using different timer styles.
+                You will complete 2 focus sessions using different timer styles.
               </p>
 
               <h3 className="text-lg font-semibold mt-4">What We'll Collect</h3>
@@ -75,9 +75,8 @@ export default function ConsentPage() {
 
               <h3 className="text-lg font-semibold mt-4">Time Commitment</h3>
               <p>
-                The study requires at least 8 focus sessions (25 minutes each) over several
-                days. We recommend completing at least 2 sessions per day. Each session includes
-                a brief rating survey (~30 seconds).
+                The study requires 2 focus sessions (25 minutes each) which you can complete
+                at your convenience. Each session includes a brief rating survey (~30 seconds).
               </p>
 
               <h3 className="text-lg font-semibold mt-4">Risks & Benefits</h3>

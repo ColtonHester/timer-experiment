@@ -5,15 +5,15 @@
  * Key requirements:
  * - Each participant gets equal exposure to both conditions (countdown & hourglass)
  * - Conditions alternate to minimize carryover effects (no clustering)
- * - Each participant gets at least 2 sessions of each condition
- * - Default: 8 total sessions (4 countdown, 4 hourglass)
+ * - Each participant gets 1 session of each condition
+ * - Default: 2 total sessions (1 countdown, 1 hourglass)
  */
 
 export type TimerCondition = 'COUNTDOWN' | 'HOURGLASS'
 
 interface RandomizationOptions {
-  totalSessions?: number  // Total number of sessions (default: 8)
-  minPerCondition?: number  // Minimum sessions per condition (default: 2)
+  totalSessions?: number  // Total number of sessions (default: 2)
+  minPerCondition?: number  // Minimum sessions per condition (default: 1)
 }
 
 /**
@@ -29,7 +29,7 @@ interface RandomizationOptions {
 export function generateSessionSequence(
   options: RandomizationOptions = {}
 ): TimerCondition[] {
-  const { totalSessions = 8, minPerCondition = 2 } = options
+  const { totalSessions = 2, minPerCondition = 1 } = options
 
   // Validate inputs
   if (totalSessions % 2 !== 0) {
@@ -62,7 +62,7 @@ export function generateSessionSequence(
 export function generateFlexibleSequence(
   options: RandomizationOptions = {}
 ): TimerCondition[] {
-  const { totalSessions = 8 } = options
+  const { totalSessions = 2 } = options
 
   if (totalSessions % 2 !== 0) {
     throw new Error('Total sessions must be even for balanced design')
@@ -126,14 +126,14 @@ export function analyzeSequence(sequence: TimerCondition[]) {
 /**
  * Example usage:
  *
- * const sequence = generateSessionSequence({ totalSessions: 8 })
+ * const sequence = generateSessionSequence({ totalSessions: 2 })
  * console.log(sequence)
- * // Possible output: ['HOURGLASS', 'COUNTDOWN', 'COUNTDOWN', 'HOURGLASS', 'HOURGLASS', 'COUNTDOWN', 'COUNTDOWN', 'HOURGLASS']
+ * // Possible output: ['HOURGLASS', 'COUNTDOWN'] or ['COUNTDOWN', 'HOURGLASS']
  *
- * const condition = getConditionForSession(sequence, 3)
- * console.log(condition) // 'COUNTDOWN'
+ * const condition = getConditionForSession(sequence, 1)
+ * console.log(condition) // 'HOURGLASS' or 'COUNTDOWN'
  *
  * const analysis = analyzeSequence(sequence)
  * console.log(analysis)
- * // { total: 8, countdown: 4, hourglass: 4, balance: true, transitions: 7, maxPossibleTransitions: 7 }
+ * // { total: 2, countdown: 1, hourglass: 1, balance: true, transitions: 1, maxPossibleTransitions: 1 }
  */

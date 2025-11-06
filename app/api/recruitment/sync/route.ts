@@ -47,7 +47,19 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error syncing to recruitment database:', error)
 
-    // Don't fail the entire baseline submission if sync fails
+    // Check if this is a duplicate email error
+    if (error instanceof Error && error.message.includes('DUPLICATE_EMAIL')) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'DUPLICATE_EMAIL',
+          message: error.message.replace('DUPLICATE_EMAIL: ', ''),
+        },
+        { status: 409 } // 409 Conflict for duplicate
+      )
+    }
+
+    // For other errors, don't fail the entire baseline submission
     // Just log the error and return a warning
     return NextResponse.json(
       {
