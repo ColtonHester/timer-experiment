@@ -13,12 +13,12 @@ interface ReminderParticipant {
   sessionsCompleted: number
   daysSinceRegistration: number
   daysSinceLastReminder: number | null
-  recommendedReminder: 'DAY_3' | 'DAY_7' | 'DAY_14' | 'COMPLETE' | 'WITHDRAWN' | 'UNSUBSCRIBED' | 'NONE'
+  recommendedReminder: 'DAY_2' | 'DAY_5' | 'COMPLETE' | 'WITHDRAWN' | 'UNSUBSCRIBED' | 'NONE'
   lastReminderSent: string | null
   reminderCount: number
 }
 
-type FilterType = 'all' | 'DAY_3' | 'DAY_7' | 'DAY_14'
+type FilterType = 'all' | 'DAY_2' | 'DAY_5'
 
 export default function RemindersPage() {
   const [password, setPassword] = useState('')
@@ -157,9 +157,8 @@ export default function RemindersPage() {
   })
 
   const reminderCounts = {
-    DAY_3: participants.filter(p => p.recommendedReminder === 'DAY_3').length,
-    DAY_7: participants.filter(p => p.recommendedReminder === 'DAY_7').length,
-    DAY_14: participants.filter(p => p.recommendedReminder === 'DAY_14').length,
+    DAY_2: participants.filter(p => p.recommendedReminder === 'DAY_2').length,
+    DAY_5: participants.filter(p => p.recommendedReminder === 'DAY_5').length,
   }
 
   // Show loading spinner while checking for stored auth
@@ -252,25 +251,18 @@ export default function RemindersPage() {
                 All Active ({filteredParticipants.length})
               </Button>
               <Button
-                onClick={() => setFilter('DAY_3')}
-                variant={filter === 'DAY_3' ? 'default' : 'outline'}
-                className={filter === 'DAY_3' ? 'bg-red-600 hover:bg-red-700' : ''}
+                onClick={() => setFilter('DAY_2')}
+                variant={filter === 'DAY_2' ? 'default' : 'outline'}
+                className={filter === 'DAY_2' ? 'bg-red-600 hover:bg-red-700' : ''}
               >
-                Day 3 Reminder ({reminderCounts.DAY_3})
+                Day 2 Reminder ({reminderCounts.DAY_2})
               </Button>
               <Button
-                onClick={() => setFilter('DAY_7')}
-                variant={filter === 'DAY_7' ? 'default' : 'outline'}
-                className={filter === 'DAY_7' ? 'bg-orange-600 hover:bg-orange-700' : ''}
+                onClick={() => setFilter('DAY_5')}
+                variant={filter === 'DAY_5' ? 'default' : 'outline'}
+                className={filter === 'DAY_5' ? 'bg-orange-600 hover:bg-orange-700' : ''}
               >
-                Day 7 Reminder ({reminderCounts.DAY_7})
-              </Button>
-              <Button
-                onClick={() => setFilter('DAY_14')}
-                variant={filter === 'DAY_14' ? 'default' : 'outline'}
-                className={filter === 'DAY_14' ? 'bg-yellow-600 hover:bg-yellow-700' : ''}
-              >
-                Day 14 Reminder ({reminderCounts.DAY_14})
+                Day 5 Reminder ({reminderCounts.DAY_5})
               </Button>
             </div>
           </CardContent>
@@ -365,23 +357,18 @@ export default function RemindersPage() {
                           : 'Never'}
                       </td>
                       <td className="py-3">
-                        {participant.recommendedReminder === 'DAY_3' && (
+                        {participant.recommendedReminder === 'DAY_2' && (
                           <span className="text-xs px-2 py-1 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded">
-                            Day 3
+                            Day 2
                           </span>
                         )}
-                        {participant.recommendedReminder === 'DAY_7' && (
+                        {participant.recommendedReminder === 'DAY_5' && (
                           <span className="text-xs px-2 py-1 bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 rounded">
-                            Day 7
-                          </span>
-                        )}
-                        {participant.recommendedReminder === 'DAY_14' && (
-                          <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 rounded">
-                            Day 14
+                            Day 5
                           </span>
                         )}
                         {participant.recommendedReminder === 'NONE' && (
-                          <span className="text-xs px-2 py-1 bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200 rounded">
+                          <span className="text-xs px-2 py-1 bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-800 dark:text-gray-200 rounded">
                             None
                           </span>
                         )}

@@ -36,9 +36,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!['day3', 'day7', 'day14'].includes(reminderType)) {
+    if (!['day2', 'day5'].includes(reminderType)) {
       return NextResponse.json(
-        { error: 'Invalid reminderType. Must be: day3, day7, or day14' },
+        { error: 'Invalid reminderType. Must be: day2 or day5' },
         { status: 400 }
       )
     }
@@ -158,9 +158,9 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    if (!['day3', 'day7', 'day14'].includes(reminderType)) {
+    if (!['day2', 'day5'].includes(reminderType)) {
       return NextResponse.json(
-        { error: 'Invalid reminderType. Must be: day3, day7, or day14' },
+        { error: 'Invalid reminderType. Must be: day2 or day5' },
         { status: 400 }
       )
     }

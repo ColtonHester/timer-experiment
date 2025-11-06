@@ -650,12 +650,10 @@ export function getEmailTemplate(reminderType: ReminderType, data: EmailData) {
   switch (reminderType) {
     case 'welcome':
       return getWelcomeEmail(data)
-    case 'day3':
-      return getDay3Email(data)
-    case 'day7':
-      return getDay7Email(data)
-    case 'day14':
-      return getDay14Email(data)
+    case 'day2':
+      return getDay3Email(data) // Reusing Day 3 template for Day 2
+    case 'day5':
+      return getDay7Email(data) // Reusing Day 7 template for Day 5
     default:
       throw new Error(`Unknown reminder type: ${reminderType}`)
   }
