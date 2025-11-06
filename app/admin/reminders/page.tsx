@@ -115,7 +115,16 @@ export default function RemindersPage() {
       return
     }
 
-    const reminderType = filter === 'all' ? 'day3' : filter.toLowerCase()
+    // Determine reminder type based on filter
+    let reminderType: string
+    if (filter === 'DAY_2') {
+      reminderType = 'day2'
+    } else if (filter === 'DAY_5') {
+      reminderType = 'day5'
+    } else {
+      alert('Please select a specific reminder type filter (Day 2 or Day 5) before bulk sending')
+      return
+    }
 
     if (!confirm(`Send ${reminderType} reminder to ${selectedIds.size} participants?`)) {
       return
@@ -349,7 +358,7 @@ export default function RemindersPage() {
                         {participant.email.split('@')[0].substring(0, 3)}***@{participant.email.split('@')[1]}
                       </td>
                       <td className="py-3 text-sm font-mono">{participant.accessCode}</td>
-                      <td className="py-3 text-sm">{participant.sessionsCompleted}/8</td>
+                      <td className="py-3 text-sm">{participant.sessionsCompleted}/2</td>
                       <td className="py-3 text-sm">{participant.daysSinceRegistration} days</td>
                       <td className="py-3 text-sm">
                         {participant.lastReminderSent
@@ -368,7 +377,7 @@ export default function RemindersPage() {
                           </span>
                         )}
                         {participant.recommendedReminder === 'NONE' && (
-                          <span className="text-xs px-2 py-1 bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-800 dark:text-gray-200 rounded">
+                          <span className="text-xs px-2 py-1 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 rounded">
                             None
                           </span>
                         )}
@@ -408,19 +417,19 @@ export default function RemindersPage() {
           <CardContent className="prose prose-sm dark:prose-invert max-w-none">
             <ul className="text-sm space-y-2">
               <li>
-                <strong>Day 3 Reminder:</strong> Sent to participants with &lt;2 sessions completed, 3+ days enrolled
+                <strong>Day 2 Reminder:</strong> Sent to participants with 0 sessions completed, 2+ days enrolled
               </li>
               <li>
-                <strong>Day 7 Reminder:</strong> Sent to participants with &lt;4 sessions completed, 7+ days enrolled
+                <strong>Day 5 Reminder:</strong> Sent to participants with 1 session completed, 5+ days enrolled
               </li>
               <li>
-                <strong>Day 14 Reminder:</strong> Sent to participants with &lt;6 sessions completed, 14+ days enrolled
+                <strong>Automatic spacing:</strong> Reminders are spaced at least 24-48 hours apart to avoid spam
               </li>
               <li>
-                Reminders are automatically spaced out (won't send if last reminder was &lt;2-4 days ago)
+                <strong>Auto-excluded:</strong> Participants who have completed 2 sessions, unsubscribed, or withdrawn are automatically filtered out
               </li>
               <li>
-                Participants who have unsubscribed or withdrawn are automatically excluded
+                <strong>Bulk sending:</strong> Select a specific reminder filter (Day 2 or Day 5) before using bulk send
               </li>
             </ul>
           </CardContent>

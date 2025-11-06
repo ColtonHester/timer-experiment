@@ -39,7 +39,16 @@ export default function BaselineSurveyPage() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to submit survey')
+        // Handle specific error responses
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+
+        // Check for duplicate email error
+        if (response.status === 409 && errorData.error === 'DUPLICATE_EMAIL') {
+          throw new Error(errorData.message || 'This email address has already been used for this study.')
+        }
+
+        // Generic error for other cases
+        throw new Error(errorData.message || 'Failed to submit survey')
       }
 
       const { participantId, accessCode: code } = await response.json()
@@ -51,7 +60,9 @@ export default function BaselineSurveyPage() {
       setAccessCode(code)
     } catch (error) {
       console.error('Error submitting survey:', error)
-      alert('Failed to submit survey. Please try again.')
+      // Display the actual error message from the API
+      const errorMessage = error instanceof Error ? error.message : 'Failed to submit survey. Please try again.'
+      alert(errorMessage)
     } finally {
       setLoading(false)
     }

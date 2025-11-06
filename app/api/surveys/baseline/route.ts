@@ -60,8 +60,17 @@ export async function POST(request: NextRequest) {
     // Sync email to recruitment database and send welcome email
     if (email) {
       try {
+        // Validate environment variable
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL
+        if (!appUrl) {
+          console.error('CRITICAL: NEXT_PUBLIC_APP_URL environment variable is not set!')
+          throw new Error('Server configuration error: NEXT_PUBLIC_APP_URL not configured')
+        }
+
+        console.log(`Syncing email to recruitment database for participant ${participant.id}`)
+
         // Sync email to recruitment database
-        const syncResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/recruitment/sync`, {
+        const syncResponse = await fetch(`${appUrl}/api/recruitment/sync`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -91,7 +100,9 @@ export async function POST(request: NextRequest) {
 
         // Send welcome email with access code (non-blocking - don't fail if this errors)
         try {
-          await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/recruitment/send-welcome`, {
+          console.log(`Attempting to send welcome email to ${email} with access code ${participant.accessCode}`)
+
+          const welcomeResponse = await fetch(`${appUrl}/api/recruitment/send-welcome`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -102,9 +113,20 @@ export async function POST(request: NextRequest) {
               accessCode: participant.accessCode,
             }),
           })
+
+          if (!welcomeResponse.ok) {
+            const errorData = await welcomeResponse.json()
+            console.error('Warning: Welcome email endpoint returned error:', {
+              status: welcomeResponse.status,
+              error: errorData
+            })
+          } else {
+            const successData = await welcomeResponse.json()
+            console.log('Welcome email sent successfully:', successData)
+          }
         } catch (emailError) {
           // Don't fail baseline if welcome email fails
-          console.error('Warning: Failed to send welcome email:', emailError)
+          console.error('Warning: Failed to send welcome email (network/fetch error):', emailError)
         }
       } catch (syncError) {
         // Don't fail the baseline submission if sync has network errors

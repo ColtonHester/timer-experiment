@@ -15,8 +15,27 @@ const resend = new Resend(process.env.RESEND_API_KEY)
  */
 export async function POST(request: NextRequest) {
   try {
+    // Validate environment variables
+    if (!process.env.RESEND_API_KEY) {
+      console.error('CRITICAL: RESEND_API_KEY environment variable is not set!')
+      return NextResponse.json(
+        { error: 'Server configuration error: Email service not configured' },
+        { status: 500 }
+      )
+    }
+
+    if (!process.env.NEXT_PUBLIC_APP_URL) {
+      console.error('CRITICAL: NEXT_PUBLIC_APP_URL environment variable is not set!')
+      return NextResponse.json(
+        { error: 'Server configuration error: Application URL not configured' },
+        { status: 500 }
+      )
+    }
+
     const body = await request.json()
     const { email, accessCode, participantId } = body
+
+    console.log(`[send-welcome] Received request for ${email}, access code: ${accessCode}`)
 
     // Validate required fields
     if (!email || !accessCode || !participantId) {
@@ -50,6 +69,9 @@ export async function POST(request: NextRequest) {
     const fromEmail = process.env.RECRUITMENT_FROM_EMAIL || 'noreply@resend.dev'
     const fromName = process.env.RECRUITMENT_FROM_NAME || 'DATASCI 241 Research Team'
 
+    console.log(`[send-welcome] Sending email to ${email} from ${fromName} <${fromEmail}>`)
+    console.log(`[send-welcome] Subject: ${subject}`)
+
     const { data, error } = await resend.emails.send({
       from: `${fromName} <${fromEmail}>`,
       to: [email],
@@ -64,12 +86,14 @@ export async function POST(request: NextRequest) {
     })
 
     if (error) {
-      console.error('Error sending welcome email:', error)
+      console.error('[send-welcome] Error from Resend API:', JSON.stringify(error, null, 2))
       return NextResponse.json(
         { error: 'Failed to send welcome email', details: error },
         { status: 500 }
       )
     }
+
+    console.log(`[send-welcome] ✅ Email sent successfully! Email ID: ${data?.id}`)
 
     return NextResponse.json({
       success: true,
