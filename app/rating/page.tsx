@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { motion } from 'framer-motion'
 import { Loader2, CheckCircle2 } from 'lucide-react'
+import { useBeforeUnload } from '@/hooks/useBeforeUnload'
 
 function RatingForm() {
   const router = useRouter()
@@ -19,6 +20,10 @@ function RatingForm() {
     comments: '',
   })
   const [loading, setLoading] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+
+  // Warn user before closing tab if they haven't submitted yet
+  useBeforeUnload(!submitted && !loading, 'Your session rating has not been submitted yet. Are you sure you want to leave?')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,6 +43,7 @@ function RatingForm() {
         throw new Error('Failed to submit rating')
       }
 
+      setSubmitted(true) // Mark as submitted to disable beforeunload warning
       // Navigate back to dashboard
       router.push('/dashboard')
     } catch (error) {

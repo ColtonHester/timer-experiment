@@ -6,6 +6,7 @@ import HourglassTimer from '@/components/timers/HourglassTimer'
 import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
 import { Loader2, XCircle } from 'lucide-react'
+import { useBeforeUnload } from '@/hooks/useBeforeUnload'
 
 function HourglassSessionContent() {
   const router = useRouter()
@@ -14,9 +15,14 @@ function HourglassSessionContent() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [startTime, setStartTime] = useState<Date | null>(null)
+  const [isPaused, setIsPaused] = useState(false)
+  const [currentPauseId, setCurrentPauseId] = useState<string | null>(null)
 
   const sessionNumber = searchParams.get('sessionNumber')
   const participantId = typeof window !== 'undefined' ? localStorage.getItem('participantId') : null
+
+  // Warn user before closing tab during active session
+  useBeforeUnload(!!sessionId && !loading, 'Your session is in progress. Are you sure you want to leave?')
 
   useEffect(() => {
     if (!participantId || !sessionNumber) {
@@ -103,6 +109,51 @@ function HourglassSessionContent() {
     }
   }
 
+  const handlePause = async () => {
+    if (!sessionId || isPaused) return
+
+    try {
+      const response = await fetch('/api/sessions/pause', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to pause session')
+      }
+
+      const data = await response.json()
+      setCurrentPauseId(data.pauseId)
+      setIsPaused(true)
+    } catch (err) {
+      console.error('Error pausing session:', err)
+      alert('Failed to pause session. Please try again.')
+    }
+  }
+
+  const handleResume = async () => {
+    if (!sessionId || !currentPauseId || !isPaused) return
+
+    try {
+      const response = await fetch('/api/sessions/resume', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, pauseId: currentPauseId }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to resume session')
+      }
+
+      setCurrentPauseId(null)
+      setIsPaused(false)
+    } catch (err) {
+      console.error('Error resuming session:', err)
+      alert('Failed to resume session. Please try again.')
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -149,7 +200,7 @@ function HourglassSessionContent() {
       </div>
 
       {/* Timer Display */}
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-6">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -159,15 +210,28 @@ function HourglassSessionContent() {
           <HourglassTimer
             durationSeconds={1500} // 25 minutes
             onComplete={handleComplete}
+            isPaused={isPaused}
           />
         </motion.div>
+
+        {/* Pause/Resume Button */}
+        <Button
+          onClick={isPaused ? handleResume : handlePause}
+          variant={isPaused ? 'default' : 'outline'}
+          size="lg"
+          className="min-w-[120px]"
+        >
+          {isPaused ? 'Resume' : 'Pause'}
+        </Button>
       </div>
 
       {/* Footer hint */}
       <div className="border-t bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 py-3 text-center">
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Focus on your work at your natural pace
+            {isPaused
+              ? 'Take a break - resume when you\'re ready'
+              : 'Focus on your work - you can pause anytime if needed'}
           </p>
         </div>
       </div>

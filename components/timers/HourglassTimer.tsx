@@ -7,26 +7,53 @@ interface HourglassTimerProps {
   durationSeconds: number
   onComplete: () => void
   onTick?: (remainingSeconds: number) => void
+  isPaused?: boolean
+  onPause?: () => void
+  onResume?: () => void
 }
 
 export default function HourglassTimer({
   durationSeconds,
   onComplete,
   onTick,
+  isPaused = false,
+  onPause,
+  onResume,
 }: HourglassTimerProps) {
   const [remainingSeconds, setRemainingSeconds] = useState(durationSeconds)
   const [isRunning, setIsRunning] = useState(true)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const startTimeRef = useRef<number>(Date.now())
+  const pausedTimeRef = useRef<number>(0) // Track total paused time
+  const pauseStartRef = useRef<number | null>(null) // Track when current pause started
+
+  // Handle pause state changes
+  useEffect(() => {
+    if (isPaused) {
+      // Timer just paused
+      if (pauseStartRef.current === null) {
+        pauseStartRef.current = Date.now()
+      }
+    } else {
+      // Timer just resumed
+      if (pauseStartRef.current !== null) {
+        const pauseDuration = Date.now() - pauseStartRef.current
+        pausedTimeRef.current += pauseDuration
+        pauseStartRef.current = null
+      }
+    }
+  }, [isPaused])
 
   useEffect(() => {
-    if (!isRunning) return
+    if (!isRunning || isPaused) return
 
     // Use timestamp-based timing to handle inactive tabs
     intervalRef.current = setInterval(() => {
       const now = Date.now()
-      const elapsed = Math.floor((now - startTimeRef.current) / 1000)
-      const remaining = Math.max(0, durationSeconds - elapsed)
+      const totalElapsed = Math.floor((now - startTimeRef.current) / 1000)
+      const pausedSeconds = Math.floor(pausedTimeRef.current / 1000)
+      const activeElapsed = totalElapsed - pausedSeconds
+      const remaining = Math.max(0, durationSeconds - activeElapsed)
 
       setRemainingSeconds(remaining)
 
@@ -50,7 +77,7 @@ export default function HourglassTimer({
         clearInterval(intervalRef.current)
       }
     }
-  }, [isRunning, onComplete, onTick, durationSeconds])
+  }, [isRunning, isPaused, onComplete, onTick, durationSeconds])
 
   // Calculate progress (0 = full, 100 = empty)
   const progress = ((durationSeconds - remainingSeconds) / durationSeconds) * 100
@@ -199,6 +226,20 @@ export default function HourglassTimer({
         </svg>
       </div>
 
+      {/* Paused indicator with fixed height to prevent layout shift */}
+      <div className="h-8 flex items-center justify-center">
+        {isPaused && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="text-xl font-bold text-amber-600 dark:text-amber-400"
+          >
+            PAUSED
+          </motion.div>
+        )}
+      </div>
+
       {/* Motivational Text (NO TIME DISPLAY) */}
       <div className="text-center space-y-3 max-w-md">
         <motion.p
@@ -207,7 +248,7 @@ export default function HourglassTimer({
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
-          Stay focused on your task
+          {isPaused ? 'Timer paused - resume when ready' : 'Stay focused on your task'}
         </motion.p>
 
         <motion.p
@@ -216,7 +257,7 @@ export default function HourglassTimer({
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
         >
-          Take your time and work at your natural pace
+          {isPaused ? 'Take your time' : 'Work at your natural pace'}
         </motion.p>
       </div>
 

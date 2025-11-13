@@ -85,6 +85,11 @@ model Session {
   endTime            DateTime?       // When participant stopped the session
   actualDuration     Int?            // Calculated duration in seconds (endTime - startTime)
 
+  // Pause tracking - for measuring attention patterns
+  pauseCount         Int      @default(0)  // Number of times participant paused
+  totalPausedTime    Int      @default(0)  // Total seconds spent paused
+  pauseEvents        SessionPause[]        // Individual pause events for detailed analysis
+
   // Completion tracking
   completedFullSession Boolean @default(false)  // Did they reach the target duration?
   overrunAmount        Int?           // If they went past target, how many seconds? (null if stopped early)
@@ -137,4 +142,21 @@ model PostTreatmentSurvey {
   completedAt DateTime @default(now())
 
   @@index([participantId])
+}
+
+// SessionPause model - tracks individual pause events for detailed behavioral analysis
+model SessionPause {
+  id            String   @id @default(uuid())
+  sessionId     String
+  session       Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  // Pause timing
+  pausedAt      DateTime        // When the timer was paused
+  resumedAt     DateTime?       // When the timer was resumed (null if currently paused)
+  pauseDuration Int?            // Calculated duration in seconds (resumedAt - pausedAt)
+
+  createdAt     DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([pausedAt])
 }

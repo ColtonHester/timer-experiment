@@ -43,6 +43,8 @@ CREATE TABLE "Session" (
     "startTime" TIMESTAMP WITH TIME ZONE NOT NULL,
     "endTime" TIMESTAMP WITH TIME ZONE,
     "actualDuration" INTEGER,
+    "pauseCount" INTEGER NOT NULL DEFAULT 0,
+    "totalPausedTime" INTEGER NOT NULL DEFAULT 0,
     "completedFullSession" BOOLEAN NOT NULL DEFAULT FALSE,
     "overrunAmount" INTEGER,
     "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
@@ -71,6 +73,16 @@ CREATE TABLE "PostTreatmentSurvey" (
     "completedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+-- SessionPause table - tracks individual pause events for detailed behavioral analysis
+CREATE TABLE "SessionPause" (
+    "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "sessionId" UUID NOT NULL REFERENCES "Session"("id") ON DELETE CASCADE,
+    "pausedAt" TIMESTAMP WITH TIME ZONE NOT NULL,
+    "resumedAt" TIMESTAMP WITH TIME ZONE,
+    "pauseDuration" INTEGER,
+    "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
 -- Indexes for performance
 CREATE INDEX "Participant_createdAt_idx" ON "Participant"("createdAt");
 CREATE INDEX "Participant_accessCode_idx" ON "Participant"("accessCode");
@@ -79,6 +91,8 @@ CREATE INDEX "Session_participantId_sessionNumber_idx" ON "Session"("participant
 CREATE INDEX "Session_condition_idx" ON "Session"("condition");
 CREATE INDEX "PostSessionRating_sessionId_idx" ON "PostSessionRating"("sessionId");
 CREATE INDEX "PostTreatmentSurvey_participantId_idx" ON "PostTreatmentSurvey"("participantId");
+CREATE INDEX "SessionPause_sessionId_idx" ON "SessionPause"("sessionId");
+CREATE INDEX "SessionPause_pausedAt_idx" ON "SessionPause"("pausedAt");
 
 -- Trigger to automatically update updatedAt timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -97,13 +111,17 @@ CREATE TRIGGER update_participant_updated_at
 -- Comments for documentation
 COMMENT ON TABLE "Participant" IS 'Anonymous participant records with access codes for session resumption';
 COMMENT ON TABLE "BaselineSurvey" IS 'Pre-experiment baseline survey measuring time anxiety and focus habits';
-COMMENT ON TABLE "Session" IS 'Individual 25-minute focus sessions with automated timing data';
+COMMENT ON TABLE "Session" IS 'Individual 25-minute focus sessions with automated timing data and pause tracking';
 COMMENT ON TABLE "PostSessionRating" IS 'Post-session ratings collected immediately after each session';
-COMMENT ON TABLE "PostTreatmentSurvey" IS 'Final survey collected after all 8 sessions are complete';
+COMMENT ON TABLE "PostTreatmentSurvey" IS 'Final survey collected after all 2 sessions are complete';
+COMMENT ON TABLE "SessionPause" IS 'Individual pause events within sessions for behavioral analysis';
 
 COMMENT ON COLUMN "Participant"."accessCode" IS 'Unique access code in format MIDS-XXXX-YYYY for participant persistence';
 COMMENT ON COLUMN "Participant"."emailCollectedAt" IS 'Timestamp when email was provided (email stored in separate recruitment DB)';
-COMMENT ON COLUMN "Participant"."conditionSequence" IS 'Pre-randomized array of 8 timer conditions for perfect counterbalancing';
-COMMENT ON COLUMN "Session"."actualDuration" IS 'Calculated duration in seconds (endTime - startTime)';
-COMMENT ON COLUMN "Session"."completedFullSession" IS 'True if participant reached target duration (25 minutes)';
+COMMENT ON COLUMN "Participant"."conditionSequence" IS 'Pre-randomized array of 2 timer conditions (1 countdown + 1 hourglass)';
+COMMENT ON COLUMN "Session"."actualDuration" IS 'Calculated duration in seconds (endTime - startTime), includes paused time';
+COMMENT ON COLUMN "Session"."pauseCount" IS 'Number of times participant paused during this session';
+COMMENT ON COLUMN "Session"."totalPausedTime" IS 'Total seconds spent paused during this session';
+COMMENT ON COLUMN "Session"."completedFullSession" IS 'True if participant reached target duration (25 minutes of active time)';
 COMMENT ON COLUMN "Session"."overrunAmount" IS 'Seconds past target duration, null if stopped early';
+COMMENT ON COLUMN "SessionPause"."pauseDuration" IS 'Duration of this pause in seconds (resumedAt - pausedAt)';

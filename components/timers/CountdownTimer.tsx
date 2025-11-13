@@ -8,26 +8,53 @@ interface CountdownTimerProps {
   durationSeconds: number
   onComplete: () => void
   onTick?: (remainingSeconds: number) => void
+  isPaused?: boolean
+  onPause?: () => void
+  onResume?: () => void
 }
 
 export default function CountdownTimer({
   durationSeconds,
   onComplete,
   onTick,
+  isPaused = false,
+  onPause,
+  onResume,
 }: CountdownTimerProps) {
   const [remainingSeconds, setRemainingSeconds] = useState(durationSeconds)
   const [isRunning, setIsRunning] = useState(true)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const startTimeRef = useRef<number>(Date.now())
+  const pausedTimeRef = useRef<number>(0) // Track total paused time
+  const pauseStartRef = useRef<number | null>(null) // Track when current pause started
+
+  // Handle pause state changes
+  useEffect(() => {
+    if (isPaused) {
+      // Timer just paused
+      if (pauseStartRef.current === null) {
+        pauseStartRef.current = Date.now()
+      }
+    } else {
+      // Timer just resumed
+      if (pauseStartRef.current !== null) {
+        const pauseDuration = Date.now() - pauseStartRef.current
+        pausedTimeRef.current += pauseDuration
+        pauseStartRef.current = null
+      }
+    }
+  }, [isPaused])
 
   useEffect(() => {
-    if (!isRunning) return
+    if (!isRunning || isPaused) return
 
     // Use timestamp-based timing to handle inactive tabs
     intervalRef.current = setInterval(() => {
       const now = Date.now()
-      const elapsed = Math.floor((now - startTimeRef.current) / 1000)
-      const remaining = Math.max(0, durationSeconds - elapsed)
+      const totalElapsed = Math.floor((now - startTimeRef.current) / 1000)
+      const pausedSeconds = Math.floor(pausedTimeRef.current / 1000)
+      const activeElapsed = totalElapsed - pausedSeconds
+      const remaining = Math.max(0, durationSeconds - activeElapsed)
 
       setRemainingSeconds(remaining)
 
@@ -51,7 +78,7 @@ export default function CountdownTimer({
         clearInterval(intervalRef.current)
       }
     }
-  }, [isRunning, onComplete, onTick, durationSeconds])
+  }, [isRunning, isPaused, onComplete, onTick, durationSeconds])
 
   // Calculate progress for the ring - ring depletes as time runs out
   const circumference = 2 * Math.PI * 120 // radius = 120
@@ -117,10 +144,24 @@ export default function CountdownTimer({
         </div>
       </div>
 
+      {/* Paused indicator with fixed height to prevent layout shift */}
+      <div className="h-8 flex items-center justify-center">
+        {isPaused && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="text-xl font-bold text-amber-600 dark:text-amber-400"
+          >
+            PAUSED
+          </motion.div>
+        )}
+      </div>
+
       {/* Progress Info */}
       <div className="text-center space-y-2">
         <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
-          Keep focusing on your task
+          {isPaused ? 'Timer paused - resume when ready' : 'Keep focusing on your task'}
         </p>
         <p className="text-sm text-gray-500 dark:text-gray-400">
           {Math.floor(((100 - progress) / 100) * 25)} of 25 minutes complete

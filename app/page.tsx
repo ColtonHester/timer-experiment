@@ -101,7 +101,7 @@ export default function HomePage() {
           <CardContent>
             <ol className="space-y-3 list-decimal list-inside text-gray-700 dark:text-gray-300">
               <li>Complete a brief baseline survey about your focus habits</li>
-              <li>Use our timer app for your regular study sessions (at least 2 per day)</li>
+              <li>Complete 2 focus sessions at your convenience</li>
               <li>Experience both timer styles (you'll be automatically assigned each session)</li>
               <li>Provide quick ratings after each session (takes ~30 seconds)</li>
               <li>Share final feedback about your experience</li>

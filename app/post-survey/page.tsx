@@ -6,17 +6,22 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { motion } from 'framer-motion'
 import { Loader2, Trophy } from 'lucide-react'
+import { useBeforeUnload } from '@/hooks/useBeforeUnload'
 
 export default function PostTreatmentSurveyPage() {
   const router = useRouter()
   const [participantId, setParticipantId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
   const [formData, setFormData] = useState({
     preferredTimer: '',
     qualitativeFeedback: '',
     wouldUseAgain: '',
     recommendToOthers: '',
   })
+
+  // Warn user before closing tab if they haven't submitted yet
+  useBeforeUnload(!submitted && !loading && !!participantId, 'Your final survey has not been submitted yet. Are you sure you want to leave?')
 
   useEffect(() => {
     const id = localStorage.getItem('participantId')
@@ -48,6 +53,7 @@ export default function PostTreatmentSurveyPage() {
         throw new Error('Failed to submit survey')
       }
 
+      setSubmitted(true) // Mark as submitted to disable beforeunload warning
       // Navigate to thank you page
       router.push('/thank-you')
     } catch (error) {
