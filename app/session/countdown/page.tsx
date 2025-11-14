@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import CountdownTimer from '@/components/timers/CountdownTimer'
 import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
-import { Loader2, XCircle, Pause, Play } from 'lucide-react'
+import { Loader2, XCircle } from 'lucide-react'
 import { useBeforeUnload } from '@/hooks/useBeforeUnload'
 
 function CountdownSessionContent() {
@@ -235,23 +235,9 @@ function CountdownSessionContent() {
             durationSeconds={1500} // 25 minutes
             onComplete={handleComplete}
             isPaused={isPaused}
+            onPause={handlePause}
+            onResume={handleResume}
           />
-
-          {/* Pause/Play Button - positioned between timer and instructions */}
-          <div className="mt-6">
-            <Button
-              onClick={isPaused ? handleResume : handlePause}
-              variant={isPaused ? 'default' : 'outline'}
-              size="lg"
-              className="w-14 h-14 rounded-full p-0"
-            >
-              {isPaused ? (
-                <Play className="w-6 h-6" />
-              ) : (
-                <Pause className="w-6 h-6" />
-              )}
-            </Button>
-          </div>
         </motion.div>
       </div>
 

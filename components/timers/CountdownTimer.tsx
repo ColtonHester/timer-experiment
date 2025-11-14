@@ -3,6 +3,8 @@
 import { useEffect, useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { formatTime } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Pause, Play } from 'lucide-react'
 
 interface CountdownTimerProps {
   durationSeconds: number
@@ -143,6 +145,25 @@ export default function CountdownTimer({
           </motion.div>
         </div>
       </div>
+
+      {/* Pause/Play Button - positioned directly below timer */}
+      {onPause && onResume && (
+        <div className="flex justify-center">
+          <Button
+            onClick={isPaused ? onResume : onPause}
+            variant="outline"
+            size="icon"
+            className="w-14 h-14 rounded-full p-0"
+            aria-label={isPaused ? 'Resume timer' : 'Pause timer'}
+          >
+            {isPaused ? (
+              <Play className="w-6 h-6" />
+            ) : (
+              <Pause className="w-6 h-6" />
+            )}
+          </Button>
+        </div>
+      )}
 
       {/* Progress Info */}
       <div className="text-center space-y-2">
