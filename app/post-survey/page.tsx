@@ -98,7 +98,7 @@ export default function PostTreatmentSurveyPage() {
                   ].map((option) => (
                     <label
                       key={option.value}
-                      className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
+                      className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors"
                     >
                       <input
                         type="radio"
@@ -149,7 +149,7 @@ export default function PostTreatmentSurveyPage() {
                   {['yes', 'no'].map((option) => (
                     <label
                       key={option}
-                      className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-accent cursor-pointer transition-colors flex-1"
+                      className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors flex-1"
                     >
                       <input
                         type="radio"
@@ -176,7 +176,7 @@ export default function PostTreatmentSurveyPage() {
                   {['yes', 'no'].map((option) => (
                     <label
                       key={option}
-                      className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-accent cursor-pointer transition-colors flex-1"
+                      className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors flex-1"
                     >
                       <input
                         type="radio"

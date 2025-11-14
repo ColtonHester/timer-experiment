@@ -224,33 +224,35 @@ function CountdownSessionContent() {
       </div>
 
       {/* Timer Display */}
-      <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-6">
+      <div className="flex-1 flex flex-col items-center justify-center p-8">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="w-full max-w-2xl"
+          className="w-full max-w-2xl flex flex-col items-center"
         >
           <CountdownTimer
             durationSeconds={1500} // 25 minutes
             onComplete={handleComplete}
             isPaused={isPaused}
           />
-        </motion.div>
 
-        {/* Pause/Play Button */}
-        <Button
-          onClick={isPaused ? handleResume : handlePause}
-          variant={isPaused ? 'default' : 'outline'}
-          size="lg"
-          className="w-14 h-14 rounded-full p-0"
-        >
-          {isPaused ? (
-            <Play className="w-6 h-6" />
-          ) : (
-            <Pause className="w-6 h-6" />
-          )}
-        </Button>
+          {/* Pause/Play Button - positioned between timer and instructions */}
+          <div className="mt-6">
+            <Button
+              onClick={isPaused ? handleResume : handlePause}
+              variant={isPaused ? 'default' : 'outline'}
+              size="lg"
+              className="w-14 h-14 rounded-full p-0"
+            >
+              {isPaused ? (
+                <Play className="w-6 h-6" />
+              ) : (
+                <Pause className="w-6 h-6" />
+              )}
+            </Button>
+          </div>
+        </motion.div>
       </div>
 
       {/* Footer hint */}
