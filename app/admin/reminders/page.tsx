@@ -385,7 +385,10 @@ export default function RemindersPage() {
                       <td className="py-3">
                         {participant.recommendedReminder !== 'NONE' && (
                           <Button
-                            onClick={() => handleSendReminder(participant.participantId, participant.recommendedReminder.toLowerCase())}
+                            onClick={() => handleSendReminder(
+                              participant.participantId,
+                              participant.recommendedReminder === 'DAY_2' ? 'day2' : 'day5'
+                            )}
                             disabled={sending}
                             size="sm"
                             variant="outline"
