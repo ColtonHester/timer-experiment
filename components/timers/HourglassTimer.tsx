@@ -165,8 +165,8 @@ export default function HourglassTimer({
             />
           </g>
 
-          {/* Animated sand particles falling through neck */}
-          {isRunning && (
+          {/* Animated sand particles falling through neck - only when running AND not paused */}
+          {isRunning && !isPaused && (
             <>
               {[...Array(5)].map((_, i) => (
                 <motion.circle

@@ -279,7 +279,7 @@ export default function DashboardPage() {
                 <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
                   <li className="flex items-start space-x-2">
                     <span className="text-primary mt-0.5">•</span>
-                    <span>Complete at least 2 sessions per day for best results</span>
+                    <span>Complete both focus sessions at your convenience</span>
                   </li>
                   <li className="flex items-start space-x-2">
                     <span className="text-primary mt-0.5">•</span>

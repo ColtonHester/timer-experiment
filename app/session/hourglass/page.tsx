@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import HourglassTimer from '@/components/timers/HourglassTimer'
 import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
-import { Loader2, XCircle } from 'lucide-react'
+import { Loader2, XCircle, Pause, Play } from 'lucide-react'
 import { useBeforeUnload } from '@/hooks/useBeforeUnload'
 
 function HourglassSessionContent() {
@@ -23,6 +23,30 @@ function HourglassSessionContent() {
 
   // Warn user before closing tab during active session
   useBeforeUnload(!!sessionId && !loading, 'Your session is in progress. Are you sure you want to leave?')
+
+  // Prevent browser back button during active session
+  useEffect(() => {
+    if (!sessionId || loading) return
+
+    const handlePopState = (event: PopStateEvent) => {
+      event.preventDefault()
+      const confirmLeave = window.confirm(
+        'Your session is in progress. Going back will end your session. Are you sure you want to leave?'
+      )
+      if (!confirmLeave) {
+        // Push the current state back to prevent navigation
+        window.history.pushState(null, '', window.location.pathname + window.location.search)
+      }
+    }
+
+    // Push initial state to enable popstate detection
+    window.history.pushState(null, '', window.location.pathname + window.location.search)
+    window.addEventListener('popstate', handlePopState)
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState)
+    }
+  }, [sessionId, loading])
 
   useEffect(() => {
     if (!participantId || !sessionNumber) {
@@ -214,14 +238,18 @@ function HourglassSessionContent() {
           />
         </motion.div>
 
-        {/* Pause/Resume Button */}
+        {/* Pause/Play Button */}
         <Button
           onClick={isPaused ? handleResume : handlePause}
           variant={isPaused ? 'default' : 'outline'}
           size="lg"
-          className="min-w-[120px]"
+          className="w-14 h-14 rounded-full p-0"
         >
-          {isPaused ? 'Resume' : 'Pause'}
+          {isPaused ? (
+            <Play className="w-6 h-6" />
+          ) : (
+            <Pause className="w-6 h-6" />
+          )}
         </Button>
       </div>
 
