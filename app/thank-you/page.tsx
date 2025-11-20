@@ -71,10 +71,10 @@ export default function ThankYouPage() {
                 If you have any questions about the study or would like to learn about the
                 results when they're available, please contact us at{' '}
                 <a
-                  href="mailto:datasci241.group4@berkeley.edu"
+                  href="mailto:mids.timer.study@gmail.com"
                   className="underline font-medium"
                 >
-                  datasci241.group4@berkeley.edu
+                  mids.timer.study@gmail.com
                 </a>
               </p>
             </div>

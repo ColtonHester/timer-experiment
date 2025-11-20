@@ -77,7 +77,7 @@ function UnsubscribeContent() {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              If you need assistance, please contact the research team at datasci241@berkeley.edu
+              If you need assistance, please contact the research team at mids.timer.study@gmail.com
             </p>
           </CardContent>
         </Card>
@@ -114,7 +114,7 @@ function UnsubscribeContent() {
             {result.success && result.type === 'withdraw' && (
               <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
                 <p className="text-sm text-gray-900 dark:text-gray-100">
-                  Thank you for your time and participation in our research. If you change your mind, please contact us at datasci241@berkeley.edu
+                  Thank you for your time and participation in our research. If you change your mind, please contact us at mids.timer.study@gmail.com
                 </p>
               </div>
             )}
@@ -209,8 +209,8 @@ function UnsubscribeContent() {
           <div className="text-center text-sm text-gray-600 dark:text-gray-400 pt-4 border-t border-gray-200 dark:border-gray-700">
             <p>
               Questions? Contact us at{' '}
-              <a href="mailto:datasci241@berkeley.edu" className="text-primary hover:underline">
-                datasci241@berkeley.edu
+              <a href="mailto:mids.timer.study@gmail.com" className="text-primary hover:underline">
+                mids.timer.study@gmail.com
               </a>
             </p>
           </div>

@@ -92,8 +92,8 @@ export default function ConsentPage() {
               <h3 className="text-lg font-semibold mt-4">Contact Information</h3>
               <p>
                 If you have questions about this study, contact the research team at{' '}
-                <a href="mailto:datasci241.group4@berkeley.edu" className="text-primary">
-                  datasci241.group4@berkeley.edu
+                <a href="mailto:mids.timer.study@gmail.com" className="text-primary">
+                  mids.timer.study@gmail.com
                 </a>
               </p>
             </div>

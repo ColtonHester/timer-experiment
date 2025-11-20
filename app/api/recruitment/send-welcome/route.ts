@@ -68,6 +68,7 @@ export async function POST(request: NextRequest) {
     // Send email via Resend
     const fromEmail = process.env.RECRUITMENT_FROM_EMAIL || 'noreply@resend.dev'
     const fromName = process.env.RECRUITMENT_FROM_NAME || 'DATASCI 241 Research Team'
+    const replyToEmail = process.env.RECRUITMENT_REPLY_TO_EMAIL || fromEmail
 
     console.log(`[send-welcome] Sending email to ${email} from ${fromName} <${fromEmail}>`)
     console.log(`[send-welcome] Subject: ${subject}`)
@@ -75,6 +76,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await resend.emails.send({
       from: `${fromName} <${fromEmail}>`,
       to: [email],
+      replyTo: replyToEmail,
       subject,
       html,
       text,

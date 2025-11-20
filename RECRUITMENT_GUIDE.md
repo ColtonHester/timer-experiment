@@ -40,7 +40,7 @@ Incentive: Entry into $50 Amazon gift card raffle
 
 👉 Get started: https://your-app-url.com
 
-Questions? Contact us at datasci241@berkeley.edu
+Questions? Contact us at mids.timer.study@gmail.com
 ```
 
 ### Step 2: Participant Onboarding
@@ -559,7 +559,7 @@ Before deploying to production:
 - UC Berkeley IRB: https://cphs.berkeley.edu/
 
 **Team Contact**:
-- Email: datasci241@berkeley.edu
+- Email: mids.timer.study@gmail.com
 - Slack: #datasci241-focus-study (or your team channel)
 
 ---

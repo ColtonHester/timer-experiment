@@ -87,10 +87,12 @@ export async function POST(request: NextRequest) {
     // Send email via Resend
     const fromEmail = process.env.RECRUITMENT_FROM_EMAIL || 'noreply@resend.dev'
     const fromName = process.env.RECRUITMENT_FROM_NAME || 'DATASCI 241 Research Team'
+    const replyToEmail = process.env.RECRUITMENT_REPLY_TO_EMAIL || fromEmail
 
     const { data, error } = await resend.emails.send({
       from: `${fromName} <${fromEmail}>`,
       to: [record.email],
+      replyTo: replyToEmail,
       subject,
       html,
       text,

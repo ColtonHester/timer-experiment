@@ -199,7 +199,7 @@ Before recruiting participants:
 - [ ] Team has access to admin panel
 - [ ] IRB approval obtained (if required)
 - [ ] Recruitment email/message drafted
-- [ ] Support email monitored (datasci241.group4@berkeley.edu)
+- [ ] Support email monitored (mids.timer.study@gmail.com)
 
 ---
 
