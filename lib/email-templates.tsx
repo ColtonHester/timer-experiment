@@ -328,14 +328,18 @@ export function getDay3Email(data: EmailData): { html: string; text: string; sub
 
       <p>Thank you for joining our focus timer study! We noticed you signed up ${data.daysSinceRegistration} ${data.daysSinceRegistration === 1 ? 'day' : 'days'} ago and wanted to check in.</p>
 
-      <p>You're off to a great start with <strong>${data.sessionsCompleted} of 2 sessions</strong> completed! We'd love to see you continue your participation when you have time.</p>
+      ${data.sessionsCompleted === 0 ? `
+        <p>We'd love to see you get started with your first session when you have time! Your participation will contribute valuable data to our research on how timer visualizations affect focus.</p>
+      ` : `
+        <p>You're off to a great start with <strong>${data.sessionsCompleted} of 2 sessions</strong> completed! We'd love to see you continue your participation when you have time.</p>
 
-      <div class="progress-bar">
-        <div class="progress-fill" style="width: ${progressPercent}%;"></div>
-      </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: ${progressPercent}%;"></div>
+        </div>
+      `}
 
       <p style="font-size: 18px; color: ${COLORS.berkeleyBlue}; font-weight: 600; margin-top: 32px;">
-        ⏱️ Each session takes just 25 minutes
+        ⏱️ Each session is a 25-minute focus session
       </p>
 
       <p>Your contribution helps us understand how different timer visualizations affect focus and productivity. Every session brings valuable data to our research!</p>
@@ -389,9 +393,12 @@ Hi there,
 
 Thank you for joining our focus timer study! We noticed you signed up ${data.daysSinceRegistration} ${data.daysSinceRegistration === 1 ? 'day' : 'days'} ago and wanted to check in.
 
-You're off to a great start with ${data.sessionsCompleted} of 2 sessions completed! We'd love to see you continue your participation when you have time.
+${data.sessionsCompleted === 0
+  ? "We'd love to see you get started with your first session when you have time! Your participation will contribute valuable data to our research on how timer visualizations affect focus."
+  : `You're off to a great start with ${data.sessionsCompleted} of 2 sessions completed! We'd love to see you continue your participation when you have time.`
+}
 
-Each session takes just 25 minutes. Your contribution helps us understand how different timer visualizations affect focus and productivity.
+Each session is a 25-minute focus session. Your contribution helps us understand how different timer visualizations affect focus and productivity.
 
 Resume your sessions: ${resumeUrl}
 
@@ -447,10 +454,10 @@ export function getDay7Email(data: EmailData): { html: string; text: string; sub
 
       <div style="background-color: #FFF9E6; border-left: 4px solid ${COLORS.californiaGold}; padding: 20px; margin: 24px 0; border-radius: 4px;">
         <p style="margin: 0; color: ${COLORS.berkeleyBlue}; font-weight: 600;">
-          ⚡ Quick Reminder
+          ⚡ You're Almost Done!
         </p>
         <p style="margin: 12px 0 0 0; font-size: 14px;">
-          We recommend completing 2 sessions per week to maintain momentum. Each session is only 25 minutes!
+          Just one more 25-minute session to complete the study. You can fit it in whenever works best for your schedule!
         </p>
       </div>
 
@@ -504,7 +511,7 @@ You're ${progressPercent.toFixed(0)}% of the way through the study. Just ${remai
 
 Your data is providing valuable insights into how timer visualizations impact focus. Every additional session you complete strengthens our research findings.
 
-Quick Reminder: We recommend completing 2 sessions per week to maintain momentum. Each session is only 25 minutes!
+You're Almost Done! Just one more 25-minute session to complete the study. You can fit it in whenever works best for your schedule!
 
 Continue your sessions: ${resumeUrl}
 
