@@ -14,7 +14,7 @@ export default function BaselineSurveyPage() {
   const [formData, setFormData] = useState({
     timeAnxietyScore: 3,
     typicalFocusDuration: 25,
-    unitsEnrolled: '',
+    classesEnrolled: '',
     usesTimerCurrently: '',
     preferredTimerType: '',
     email: '', // Optional email for recruitment tracking
@@ -31,7 +31,7 @@ export default function BaselineSurveyPage() {
         body: JSON.stringify({
           timeAnxietyScore: formData.timeAnxietyScore,
           typicalFocusDuration: formData.typicalFocusDuration,
-          unitsEnrolled: formData.unitsEnrolled ? parseInt(formData.unitsEnrolled) : null,
+          classesEnrolled: formData.classesEnrolled ? parseInt(formData.classesEnrolled) : null,
           usesTimerCurrently: formData.usesTimerCurrently === 'yes',
           preferredTimerType: formData.preferredTimerType || null,
           email: formData.email || null, // Optional email
@@ -224,22 +224,22 @@ export default function BaselineSurveyPage() {
                 </p>
               </div>
 
-              {/* Units Enrolled (Optional) */}
+              {/* Classes Enrolled (Optional) */}
               <div className="space-y-3">
                 <label className="block text-sm font-medium">
-                  How many units are you enrolled in this semester?
+                  How many classes are you enrolled in this semester?
                   <span className="text-gray-400 ml-1">(Optional)</span>
                 </label>
                 <input
                   type="number"
                   min="0"
-                  max="30"
-                  value={formData.unitsEnrolled}
+                  max="5"
+                  value={formData.classesEnrolled}
                   onChange={(e) =>
-                    setFormData({ ...formData, unitsEnrolled: e.target.value })
+                    setFormData({ ...formData, classesEnrolled: e.target.value })
                   }
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white placeholder:text-gray-400"
-                  placeholder="e.g., 12"
+                  placeholder="e.g., 2"
                 />
               </div>
 

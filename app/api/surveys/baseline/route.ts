@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     const {
       timeAnxietyScore,
       typicalFocusDuration,
-      unitsEnrolled,
+      classesEnrolled,
       usesTimerCurrently,
       preferredTimerType,
       email, // Optional email for recruitment tracking
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
           create: {
             timeAnxietyScore,
             typicalFocusDuration,
-            unitsEnrolled: unitsEnrolled || null,
+            classesEnrolled: classesEnrolled || null,
             usesTimerCurrently: usesTimerCurrently || null,
             preferredTimerType: preferredTimerType || null,
           },

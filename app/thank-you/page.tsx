@@ -58,7 +58,7 @@ export default function ThankYouPage() {
               </h3>
               <p className="text-sm text-blue-800 dark:text-blue-200">
                 You've been entered into our raffle for completing the study! Winners will be
-                selected at random and notified via email within 2 weeks.
+                selected at random and notified via email within 3 weeks.
               </p>
             </div>
 

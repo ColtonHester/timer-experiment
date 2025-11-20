@@ -183,11 +183,50 @@ export default function DashboardPage() {
           </Card>
         </motion.div>
 
+        {/* Tips for Success */}
+        {!data.isComplete && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            <Card className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-blue-200 dark:border-blue-800">
+              <CardHeader>
+                <CardTitle className="text-lg">Tips for Success</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                  <li className="flex items-start space-x-2">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span>Keep the timer visible during your session - this helps us assess how the visualization affects your focus</span>
+                  </li>
+                  <li className="flex items-start space-x-2">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span>Use the timer for actual study or work tasks to get the most benefit</span>
+                  </li>
+                  <li className="flex items-start space-x-2">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span>You can pause if needed, or stop early if necessary - your data is still valuable!</span>
+                  </li>
+                  <li className="flex items-start space-x-2">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span>Complete the brief rating after each session while it's fresh in your mind</span>
+                  </li>
+                  <li className="flex items-start space-x-2">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span>Try to minimize other distractions during your focus sessions</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
         {/* Session History */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
         >
           <Card>
             <CardHeader>
@@ -263,41 +302,6 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </motion.div>
-
-        {/* Study Tips Card */}
-        {!data.isComplete && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-          >
-            <Card className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-blue-200 dark:border-blue-800">
-              <CardHeader>
-                <CardTitle className="text-lg">Tips for Success</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
-                  <li className="flex items-start space-x-2">
-                    <span className="text-primary mt-0.5">•</span>
-                    <span>Complete both focus sessions at your convenience</span>
-                  </li>
-                  <li className="flex items-start space-x-2">
-                    <span className="text-primary mt-0.5">•</span>
-                    <span>Use the timer for actual study/work tasks to get the most benefit</span>
-                  </li>
-                  <li className="flex items-start space-x-2">
-                    <span className="text-primary mt-0.5">•</span>
-                    <span>Complete the brief rating after each session while it's fresh in your mind</span>
-                  </li>
-                  <li className="flex items-start space-x-2">
-                    <span className="text-primary mt-0.5">•</span>
-                    <span>Try to minimize distractions during your focus sessions</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
       </div>
     </div>
   )

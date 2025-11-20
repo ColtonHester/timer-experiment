@@ -27,7 +27,7 @@ CREATE TABLE "BaselineSurvey" (
     "participantId" UUID NOT NULL UNIQUE REFERENCES "Participant"("id") ON DELETE CASCADE,
     "timeAnxietyScore" INTEGER NOT NULL CHECK ("timeAnxietyScore" BETWEEN 1 AND 5),
     "typicalFocusDuration" INTEGER NOT NULL,
-    "unitsEnrolled" INTEGER,
+    "classesEnrolled" INTEGER CHECK ("classesEnrolled" >= 0 AND "classesEnrolled" <= 5),
     "usesTimerCurrently" BOOLEAN,
     "preferredTimerType" TEXT,
     "completedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()

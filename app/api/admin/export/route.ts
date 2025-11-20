@@ -99,7 +99,7 @@ async function exportBaseline() {
       participant_id: s.participantId,
       time_anxiety_score: s.timeAnxietyScore,
       typical_focus_duration_minutes: s.typicalFocusDuration,
-      units_enrolled: s.unitsEnrolled,
+      classes_enrolled: s.classesEnrolled,
       uses_timer_currently: s.usesTimerCurrently,
       preferred_timer_type: s.preferredTimerType,
       completed_at: s.completedAt.toISOString(),

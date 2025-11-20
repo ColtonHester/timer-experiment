@@ -58,7 +58,7 @@ model BaselineSurvey {
   // Time anxiety and self-reported focus metrics
   timeAnxietyScore       Int      // 1-5 Likert scale (1 = low anxiety, 5 = high anxiety)
   typicalFocusDuration   Int      // Self-reported typical focus session length in minutes
-  unitsEnrolled          Int?     // Number of units enrolled this semester (optional)
+  classesEnrolled        Int?     // Number of classes enrolled this semester (optional, 0-3 typical)
 
   // Additional baseline questions (optional)
   usesTimerCurrently     Boolean? // Do they currently use a timer for focus work?
