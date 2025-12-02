@@ -25,11 +25,13 @@ export async function GET(request: NextRequest) {
         return await exportRatings()
       case 'post-treatment':
         return await exportPostTreatment()
+      case 'pauses':
+        return await exportPauses()
       case 'all':
         return await exportAll()
       default:
         return NextResponse.json(
-          { error: 'Invalid format. Use: sessions, baseline, ratings, post-treatment, or all' },
+          { error: 'Invalid format. Use: sessions, baseline, ratings, post-treatment, pauses, or all' },
           { status: 400 }
         )
     }
@@ -66,6 +68,8 @@ async function exportSessions() {
       actual_duration_seconds: s.actualDuration,
       completed_full_session: s.completedFullSession,
       overrun_seconds: s.overrunAmount,
+      pause_count: s.pauseCount,
+      total_paused_time_seconds: s.totalPausedTime,
       start_time: s.startTime.toISOString(),
       end_time: s.endTime?.toISOString() || '',
       created_at: s.createdAt.toISOString(),
@@ -184,12 +188,49 @@ async function exportPostTreatment() {
   })
 }
 
+async function exportPauses() {
+  const pauses = await prisma.sessionPause.findMany({
+    include: {
+      session: {
+        select: {
+          participantId: true,
+          sessionNumber: true,
+          condition: true,
+        },
+      },
+    },
+    orderBy: [{ sessionId: 'asc' }, { pausedAt: 'asc' }],
+  })
+
+  const csv = convertToCSV(
+    pauses.map((p) => ({
+      pause_id: p.id,
+      session_id: p.sessionId,
+      participant_id: p.session.participantId,
+      session_number: p.session.sessionNumber,
+      condition: p.session.condition,
+      paused_at: p.pausedAt.toISOString(),
+      resumed_at: p.resumedAt?.toISOString() || '',
+      pause_duration_seconds: p.pauseDuration,
+      created_at: p.createdAt.toISOString(),
+    }))
+  )
+
+  return new NextResponse(csv, {
+    headers: {
+      'Content-Type': 'text/csv',
+      'Content-Disposition': 'attachment; filename="session_pauses.csv"',
+    },
+  })
+}
+
 async function exportAll() {
-  const [sessions, baseline, ratings, postTreatment] = await Promise.all([
+  const [sessions, baseline, ratings, postTreatment, pauses] = await Promise.all([
     prisma.session.findMany({ include: { participant: true } }),
     prisma.baselineSurvey.findMany({ include: { participant: true } }),
     prisma.postSessionRating.findMany({ include: { session: true } }),
     prisma.postTreatmentSurvey.findMany({ include: { participant: true } }),
+    prisma.sessionPause.findMany({ include: { session: true } }),
   ])
 
   const data = {
@@ -198,10 +239,12 @@ async function exportAll() {
     total_sessions: sessions.length,
     total_ratings: ratings.length,
     total_post_treatment_surveys: postTreatment.length,
+    total_pauses: pauses.length,
     sessions,
     baseline,
     ratings,
     postTreatment,
+    pauses,
   }
 
   return NextResponse.json(data, {
