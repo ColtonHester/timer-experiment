@@ -11,7 +11,7 @@ This is a web application for conducting a causal inference experiment for DATAS
 - **Treatment**: Hourglass visualization (no numbers)
 
 **Target**: ~40 participants from UC Berkeley MIDS program
-**Duration**: 4-week study with 2+ sessions per week (8 sessions total)
+**Duration**: 2 sessions total per participant
 **Session Length**: 25-minute focus bouts (Pomodoro-style)
 
 ## 🆕 Recent Major Updates (October 2025)
@@ -37,16 +37,13 @@ This is a web application for conducting a causal inference experiment for DATAS
 - `supabase/experiment-schema.sql` - Production experiment DB schema
 - `supabase/recruitment-schema.sql` - Recruitment DB with RLS policies
 
-**Documentation**:
-- `SUPABASE_SETUP.md` - Complete database setup guide
-- `RESEND_SETUP.md` - Email service configuration guide
-- `RECRUITMENT_GUIDE.md` - Participant management workflow
+**Note**: Supabase, Resend, and recruitment workflow documentation previously in separate files has been consolidated. Environment variables are documented below and in `.env.example`.
 
 ### Sprint 2: Admin Dashboard (COMPLETED)
 **Problem Solved**: Research team can now monitor participant progress and export data.
 
 **Implementation**:
-- Real-time participation rate chart (0, 1-2, 3-4, 5-6, 7-8 sessions)
+- Real-time participation rate chart (0, 1, 2 sessions)
 - Participant list with session counts, last active, pacing warnings
 - CSV export for all data types (sessions, surveys, ratings)
 - Average session duration by condition (Countdown vs Hourglass)
@@ -164,11 +161,7 @@ timer-experiment/
 ├── supabase/             # 🆕 Supabase SQL schemas
 │   ├── experiment-schema.sql  # Production experiment DB
 │   └── recruitment-schema.sql # Recruitment DB with RLS
-├── types/                # TypeScript type definitions
-└── docs/                 # Documentation
-    ├── SUPABASE_SETUP.md
-    ├── RESEND_SETUP.md
-    └── RECRUITMENT_GUIDE.md
+└── types/                # TypeScript type definitions
 ```
 
 ## Database Schema
@@ -194,7 +187,7 @@ timer-experiment/
 3. **Session**: Each 25-minute focus session with automated timing data
    - `participantId` (String): Links to Participant
    - `condition` (TimerCondition): COUNTDOWN or HOURGLASS
-   - `sessionNumber` (Int): Sequential 1-8
+   - `sessionNumber` (Int): Sequential 1-2
    - `targetDuration` (Int): Seconds, default 1500 (25 min)
    - `startTime` (DateTime): Auto-logged
    - `endTime` (DateTime, nullable): Auto-logged
@@ -279,7 +272,7 @@ Located in `lib/randomization.ts`
 5. **Dashboard** (`/dashboard`) → View progress, start first session
 6. **Session** (`/session/countdown` or `/session/hourglass`) → 25-minute timer
 7. **Post-Session Rating** (`/rating`) → Quick 3-question survey
-8. **Repeat steps 5-7** until all 8 sessions complete
+8. **Repeat steps 5-7** until both sessions complete
 9. **Post-Treatment Survey** (`/post-survey`) → Final qualitative feedback
 10. **Thank You** → Study complete, raffle confirmation
 
@@ -312,7 +305,7 @@ Located in `lib/randomization.ts`
 - Visual: Calming, approximate
 
 ### 3. Compliance Mechanisms
-- Progress tracking: "6/8 sessions complete"
+- Progress tracking: "1/2 sessions complete"
 - Completion streaks
 - Clear "next session" prompting
 - One-click start (frictionless)
@@ -348,7 +341,7 @@ Located in `lib/randomization.ts`
     ```
   - **Process**:
     1. Generates unique access code (`MIDS-XXXX-YYYY`)
-    2. Creates randomized session sequence (8 sessions, 4 countdown + 4 hourglass)
+    2. Creates randomized session sequence (2 sessions, 1 countdown + 1 hourglass)
     3. Creates Participant record
     4. Creates BaselineSurvey record
   - **Output**:

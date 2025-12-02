@@ -45,3 +45,13 @@ next-env.d.ts
 
 # local documentation notes
 DEPLOYMENT.md
+
+# sensitive setup guides (keep locally, don't commit)
+*_SETUP.md
+*SETUP*.md
+RESEND_SETUP.md
+SUPABASE_SETUP.md
+
+# local notes
+*.local.md
+NOTES.md

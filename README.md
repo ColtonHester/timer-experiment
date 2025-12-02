@@ -118,7 +118,7 @@ npm run db:studio    # Open Prisma Studio (database GUI)
 5. **Dashboard** → View progress, start sessions
 6. **Session** → 25-minute timer (countdown or hourglass)
 7. **Rating** → Post-session brief survey
-8. **Repeat** → Complete all 8 sessions
+8. **Repeat** → Complete both sessions
 9. **Post-Survey** → Final feedback
 
 ### Returning Participants
@@ -142,9 +142,9 @@ http://localhost:3000/resume?code=MIDS-XXXX-YYYY
 - **Email reminders**: Optional email collection for study reminders (emails stored separately from experiment data)
 
 ### Randomization
-- Each participant gets a randomized sequence of 8 sessions
-- Perfect balance: 4 countdown, 4 hourglass
-- Alternating pattern minimizes carryover effects
+- Each participant gets a randomized sequence of 2 sessions
+- Perfect balance: 1 countdown, 1 hourglass
+- Order randomized to control for sequence effects
 
 ### Data Collection
 - **Automated timing**: All start/stop timestamps logged automatically
@@ -191,7 +191,7 @@ localStorage.clear()
 To change the number of required sessions, edit `lib/randomization.ts`:
 
 ```typescript
-const sequence = generateSessionSequence({ totalSessions: 10 }) // Change from 8 to 10
+const sequence = generateSessionSequence({ totalSessions: 4 }) // Change from 2 to 4
 ```
 
 ## Deployment
