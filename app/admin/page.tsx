@@ -396,16 +396,24 @@ export default function AdminPage() {
                 <Download className="w-4 h-4 mr-2" />
                 Post-Treatment Surveys
               </Button>
-            </div>
 
-            <Button
-              onClick={() => handleDownload('all')}
-              className="w-full"
-              size="lg"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Download All Data (JSON)
-            </Button>
+              <Button
+                onClick={() => handleDownload('pauses')}
+                variant="outline"
+                className="w-full justify-start"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Session Pauses
+              </Button>
+
+              <Button
+                onClick={() => handleDownload('all')}
+                className="w-full justify-start"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                All Data (JSON)
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
