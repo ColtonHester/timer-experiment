@@ -210,7 +210,7 @@ export default function BaselineSurveyPage() {
                 <input
                   type="number"
                   min="5"
-                  max="180"
+                  max="360"
                   value={formData.typicalFocusDuration}
                   onChange={(e) =>
                     setFormData({ ...formData, typicalFocusDuration: parseInt(e.target.value) })
@@ -227,7 +227,7 @@ export default function BaselineSurveyPage() {
               {/* Classes Enrolled (Optional) */}
               <div className="space-y-3">
                 <label className="block text-sm font-medium">
-                  How many classes are you enrolled in this semester?
+                  How many classes are you enrolled in this semester, if any?
                   <span className="text-gray-400 ml-1">(Optional)</span>
                 </label>
                 <input
@@ -260,7 +260,7 @@ export default function BaselineSurveyPage() {
                 />
                 <p className="text-xs text-gray-600 dark:text-gray-400">
                   <strong>Why we need this:</strong> We'll email you your access code and send reminders to complete sessions.
-                  Your email will be kept separate from your anonymous study data.
+                  Your email will be kept separate from your anonymous study data and will only be used for reminders and raffle rewards.
                 </p>
               </div>
 
