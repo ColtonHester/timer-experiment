@@ -55,3 +55,9 @@ SUPABASE_SETUP.md
 # local notes
 *.local.md
 NOTES.md
+
+# experiment data files (privacy - don't commit raw participant data)
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json

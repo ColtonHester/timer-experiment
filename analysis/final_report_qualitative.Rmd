@@ -1,0 +1,778 @@
+---
+title: "Effect of Timer Visualization on the Focus Experience"
+subtitle: "DATASCI 241 Final Report - Section 3, Group 4"
+author: "Ariel Gholar, Colton Hester, Jeremy Liu, Nitya Sree Cheera"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+    toc: true
+    number_sections: true
+  html_document:
+    toc: true
+    toc_float: true
+# bibliography: references.bib  # Uncomment when references.bib is created
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 7,
+  fig.height = 4
+)
+
+# Load libraries
+library(jsonlite)
+library(tidyverse)
+library(lmtest)
+library(sandwich)
+library(knitr)
+library(kableExtra)
+library(ggplot2)
+theme_set(theme_minimal())
+
+# =============================================================================
+# DATA LOADING AND ANALYSIS
+# =============================================================================
+
+# Load the exported experiment data
+raw_data <- fromJSON("all_data_12112025.json", flatten = TRUE)
+
+# Extract sessions data
+sessions <- raw_data$sessions %>%
+  as_tibble() %>%
+  select(
+    session_id = id,
+    participant_id = participantId,
+    condition,
+    session_number = sessionNumber,
+    target_duration = targetDuration,
+    completed_full = completedFullSession,
+    created_at = createdAt,
+    condition_sequence = participant.conditionSequence,
+    cohort = participant.cohort
+  ) %>%
+  mutate(
+    condition = factor(condition, levels = c("COUNTDOWN", "HOURGLASS")),
+    first_condition = map_chr(condition_sequence, ~ .x[1])
+  )
+
+# Extract baseline survey data
+baseline <- raw_data$baseline %>%
+  as_tibble() %>%
+  select(
+    baseline_id = id,
+    participant_id = participantId,
+    time_anxiety_score = timeAnxietyScore,
+    typical_focus_duration = typicalFocusDuration,
+    classes_enrolled = classesEnrolled,
+    uses_timer_currently = usesTimerCurrently,
+    preferred_timer_type = preferredTimerType,
+    completed_at = completedAt
+  )
+
+# Extract post-session ratings
+ratings <- raw_data$ratings %>%
+  as_tibble() %>%
+  select(
+    rating_id = id,
+    session_id = sessionId,
+    perceived_stress = perceivedStress,
+    ease_of_following = easeOfFollowing,
+    subjective_focus_quality = subjectiveFocusQuality,
+    comments,
+    completed_at = completedAt
+  )
+
+# Extract post-treatment surveys
+post_treatment <- raw_data$postTreatment %>%
+  as_tibble() %>%
+  select(
+    survey_id = id,
+    participant_id = participantId,
+    preferred_timer = preferredTimer,
+    qualitative_feedback = qualitativeFeedback,
+    would_use_again = wouldUseAgain,
+    recommend_to_others = recommendToOthers,
+    completed_at = completedAt
+  )
+
+# Join data
+sessions_with_baseline <- sessions %>%
+  left_join(baseline, by = "participant_id")
+
+analysis_df <- sessions_with_baseline %>%
+  left_join(ratings, by = "session_id")
+
+# Filter to sessions with ratings
+rated_sessions <- analysis_df %>%
+  filter(!is.na(perceived_stress))
+
+# Create paired data
+paired_data <- rated_sessions %>%
+  select(participant_id, condition, perceived_stress, ease_of_following, subjective_focus_quality) %>%
+  pivot_wider(
+    names_from = condition,
+    values_from = c(perceived_stress, ease_of_following, subjective_focus_quality)
+  ) %>%
+  filter(!is.na(perceived_stress_COUNTDOWN) & !is.na(perceived_stress_HOURGLASS)) %>%
+  mutate(
+    stress_diff = perceived_stress_HOURGLASS - perceived_stress_COUNTDOWN,
+    ease_diff = ease_of_following_HOURGLASS - ease_of_following_COUNTDOWN,
+    quality_diff = subjective_focus_quality_HOURGLASS - subjective_focus_quality_COUNTDOWN
+  )
+
+# =============================================================================
+# BASELINE SUMMARY
+# =============================================================================
+baseline_summary <- baseline %>%
+  summarise(
+    n = n(),
+    time_anxiety_mean = mean(time_anxiety_score, na.rm = TRUE),
+    time_anxiety_sd = sd(time_anxiety_score, na.rm = TRUE),
+    typical_focus_mean = mean(typical_focus_duration, na.rm = TRUE),
+    typical_focus_sd = sd(typical_focus_duration, na.rm = TRUE),
+    classes_mean = mean(classes_enrolled, na.rm = TRUE),
+    classes_sd = sd(classes_enrolled, na.rm = TRUE),
+    uses_timer_pct = mean(uses_timer_currently, na.rm = TRUE) * 100
+  )
+
+# =============================================================================
+# OUTCOME SUMMARY BY CONDITION
+# =============================================================================
+outcome_summary <- rated_sessions %>%
+  group_by(condition) %>%
+  summarise(
+    n = n(),
+    stress_mean = mean(perceived_stress, na.rm = TRUE),
+    stress_sd = sd(perceived_stress, na.rm = TRUE),
+    ease_mean = mean(ease_of_following, na.rm = TRUE),
+    ease_sd = sd(ease_of_following, na.rm = TRUE),
+    quality_mean = mean(subjective_focus_quality, na.rm = TRUE),
+    quality_sd = sd(subjective_focus_quality, na.rm = TRUE)
+  )
+
+# =============================================================================
+# STATISTICAL MODELS
+# =============================================================================
+
+# Paired t-tests
+stress_ttest <- NULL
+ease_ttest <- NULL
+quality_ttest <- NULL
+
+if (nrow(paired_data) >= 2) {
+  stress_ttest <- t.test(
+    paired_data$perceived_stress_HOURGLASS,
+    paired_data$perceived_stress_COUNTDOWN,
+    paired = TRUE
+  )
+  ease_ttest <- t.test(
+    paired_data$ease_of_following_HOURGLASS,
+    paired_data$ease_of_following_COUNTDOWN,
+    paired = TRUE
+  )
+  quality_ttest <- t.test(
+    paired_data$subjective_focus_quality_HOURGLASS,
+    paired_data$subjective_focus_quality_COUNTDOWN,
+    paired = TRUE
+  )
+}
+
+# Fixed effects models with robust SEs
+model_stress_fe <- lm(perceived_stress ~ condition + factor(participant_id), data = rated_sessions)
+stress_robust <- coeftest(model_stress_fe, vcov = vcovHC(model_stress_fe, type = "HC1"))
+
+model_ease_fe <- lm(ease_of_following ~ condition + factor(participant_id), data = rated_sessions)
+ease_robust <- coeftest(model_ease_fe, vcov = vcovHC(model_ease_fe, type = "HC1"))
+
+model_quality_fe <- lm(subjective_focus_quality ~ condition + factor(participant_id),
+                       data = rated_sessions %>% filter(!is.na(subjective_focus_quality)))
+quality_robust <- coeftest(model_quality_fe, vcov = vcovHC(model_quality_fe, type = "HC1"))
+
+# =============================================================================
+# EFFECT SIZES (Cohen's d for within-subjects)
+# =============================================================================
+cohens_d_stress <- if(nrow(paired_data) >= 2) mean(paired_data$stress_diff, na.rm = TRUE) / sd(paired_data$stress_diff, na.rm = TRUE) else NA
+cohens_d_ease <- if(nrow(paired_data) >= 2) mean(paired_data$ease_diff, na.rm = TRUE) / sd(paired_data$ease_diff, na.rm = TRUE) else NA
+cohens_d_quality <- if(nrow(paired_data) >= 2) mean(paired_data$quality_diff, na.rm = TRUE) / sd(paired_data$quality_diff, na.rm = TRUE) else NA
+
+# =============================================================================
+# CONSORT COUNTS
+# =============================================================================
+n_enrolled <- raw_data$total_participants
+n_baseline <- nrow(baseline)
+n_sessions <- raw_data$total_sessions
+n_countdown <- sum(sessions$condition == "COUNTDOWN", na.rm = TRUE)
+n_hourglass <- sum(sessions$condition == "HOURGLASS", na.rm = TRUE)
+n_rated <- nrow(rated_sessions)
+n_paired <- nrow(paired_data)
+n_post_treatment <- nrow(post_treatment)
+```
+
+\newpage
+
+# Abstract
+
+**Background:** Time management tools are widely used to enhance focus, but the visual design of timers may affect the psychological experience of timed work sessions.
+
+**Methods:** We conducted a within-subjects crossover experiment (N = `r n_enrolled` participants) comparing two timer visualizations: a precise numerical countdown timer versus an abstract hourglass animation. Participants completed two 25-minute focus sessions, one with each timer type, and rated their experience on perceived stress, ease of following, and subjective focus quality. We analyzed `r n_paired` participants who completed both conditions using paired t-tests and fixed effects regression with robust standard errors.
+
+**Results:** `r if(!is.null(stress_ttest)) paste0("Perceived stress was ", ifelse(stress_ttest$estimate < 0, "lower", "higher"), " in the hourglass condition (M diff = ", round(stress_ttest$estimate, 2), ", p = ", round(stress_ttest$p.value, 3), ").") else "Insufficient paired data for analysis."` Effect sizes were `r if(!is.na(cohens_d_stress)) paste0("d = ", round(cohens_d_stress, 2), " for stress") else "not calculable"`.
+
+**Conclusions:** Timer visualization design `r if(!is.null(stress_ttest) && stress_ttest$p.value < 0.05) "significantly affected" else "did not significantly affect"` the subjective experience of focus sessions in our sample. These findings have implications for the design of time management tools.
+
+\newpage
+
+# Introduction
+
+## Research Question
+
+Does timer visualization design (numerical countdown vs. abstract hourglass) affect the subjective experience of focus sessions, including perceived stress and self-reported focus quality?
+
+## Background and Theory
+
+[PLACEHOLDER - Group to expand with literature citations]
+
+Time perception research has demonstrated that visual feedback significantly influences subjective time experience. When individuals can see precise time remaining, they may experience heightened awareness of time passage, potentially increasing anxiety during timed tasks.
+
+**Key theoretical foundations:**
+
+1. **Time perception and visual feedback**: [PLACEHOLDER - cite Zakay & Block, 1997 on prospective time estimation]
+
+2. **Progress indicators and user behavior**: [PLACEHOLDER - cite Harrison et al., 2010 on progress bar psychology]
+
+3. **Timer anxiety**: The phenomenon where constant awareness of remaining time creates psychological pressure, potentially impairing the quality of focused work.
+
+**Theoretical mechanism:** We hypothesize that reducing temporal precision (hourglass vs. countdown) decreases moment-to-moment awareness of time passage, thereby reducing perceived stress during focus sessions without affecting actual task completion.
+
+## Hypotheses
+
+Based on our theoretical framework, we propose the following hypotheses:
+
+- **H1 (Primary):** Sessions using the hourglass visualization will be rated as less stressful than sessions using the countdown timer.
+
+- **H2:** Timer visualization will affect ease of following, though direction is exploratory.
+
+- **H3 (Exploratory):** Participant preferences after completing both conditions will deviate from 50/50, reflecting differential subjective experiences.
+
+\newpage
+
+# Experimental Design
+
+## Potential Outcomes Framework
+
+Let $Y_i(1)$ denote participant $i$'s subjective rating (e.g., perceived stress) under the HOURGLASS condition, and $Y_i(0)$ denote their rating under the COUNTDOWN condition.
+
+The individual treatment effect is:
+$$\tau_i = Y_i(1) - Y_i(0)$$
+
+The Average Treatment Effect (ATE) is:
+$$\tau = E[Y_i(1) - Y_i(0)]$$
+
+Because this is a within-subjects design, we observe both potential outcomes for each participant (at different times), allowing us to estimate individual treatment effects directly.
+
+## Randomization Process
+
+Participants were randomized to one of two condition sequences:
+
+1. **Sequence A:** COUNTDOWN first, then HOURGLASS
+2. **Sequence B:** HOURGLASS first, then COUNTDOWN
+
+Randomization was implemented within the experiment application at enrollment. This counterbalanced design controls for order effects (e.g., practice, fatigue) by ensuring any such effects are orthogonal to treatment.
+
+## Treatment Description
+
+**COUNTDOWN Condition:**
+
+- Digital numerical display showing minutes and seconds remaining (e.g., "24:59")
+- Precise, continuously updating time information
+- Participants can see exactly how much time remains at any moment
+
+**HOURGLASS Condition:**
+
+- Abstract visual animation of sand flowing through an hourglass
+- Provides general sense of time passage without precise numerical information
+- Participants cannot determine exact time remaining from the visual alone
+
+Both conditions enforced a 25-minute session duration. The timer signaled completion at the end of the session.
+
+## CONSORT Flow Diagram
+
+```
+Enrolled (N = `r n_enrolled`)
+        |
+        v
+Completed Baseline Survey (N = `r n_baseline`)
+        |
+        +----> Total Sessions Started: `r n_sessions`
+        |           - COUNTDOWN: `r n_countdown`
+        |           - HOURGLASS: `r n_hourglass`
+        |
+        +----> Sessions with Post-Session Ratings (N = `r n_rated`)
+        |
+        v
+Post-Treatment Survey (N = `r n_post_treatment`)
+        |
+        v
+Final Analysis Sample (N = `r n_paired` paired observations)
+```
+
+## Power Analysis
+
+Our original power analysis (see Appendix) was designed for a continuous duration outcome:
+
+- **Target sample size:** 40 participants
+- **Expected effect:** 3-minute difference in focus duration
+- **Within-person SD:** 5 minutes
+- **Power:** 76% for detecting the expected effect
+
+**Adaptation for subjective outcomes:** The pivot to ordinal Likert-scale outcomes (1-5) changes power considerations. With N = `r n_paired` within-subjects pairs, we can detect medium effects (Cohen's d ~ 0.5) with approximately 80% power when treating Likert scales as continuous, which is standard practice in psychological research.
+
+\newpage
+
+# Data and Methods
+
+## Methodological Pivot
+
+**Important note on outcome selection:**
+
+Our original research design hypothesized that timer visualization would affect focus session *duration* - specifically, that the less precise hourglass would lead to longer uninterrupted focus. However, upon data collection, we discovered that the timer enforced exactly 25 minutes (1500 seconds) for all participants who completed their sessions. The observed variation in "duration" reflected only browser latency between timer completion and survey submission, not meaningful focus behavior.
+
+One participant's session showed 316,479 seconds (~87 hours) - clearly representing a browser tab left open for days, not extended focus time. This confirmed that duration variation was an artifact of measurement, not a valid outcome.
+
+**Consequently, we pivoted our analysis to subjective measures:** perceived stress, ease of following, and self-reported focus quality. This pivot is theoretically appropriate because:
+
+1. Our hypothesized mechanism - that reduced temporal precision decreases time anxiety - is more directly tested by subjective experience measures than behavioral duration.
+
+2. The treatment manipulation (hourglass vs. countdown) specifically affects *perception* of time, making subjective outcomes a natural measure of the treatment effect.
+
+3. With a fixed 25-minute duration, any behavioral difference (e.g., early termination) would reflect only extreme cases, whereas subjective measures capture the full range of experiences.
+
+## Outcome Measures
+
+### Primary Outcomes (Post-Session Ratings, 1-5 Likert)
+
+| Variable | Question | Scale |
+|----------|----------|-------|
+| `perceived_stress` | "How stressful did you find this session?" | 1 = Not at all, 5 = Extremely |
+| `ease_of_following` | "How easy was it to follow the timer?" | 1 = Very difficult, 5 = Very easy |
+| `subjective_focus_quality` | "Rate your focus quality during this session" | 1 = Very poor, 5 = Excellent |
+
+**Note on survey design:** The survey UI pre-selected "3" as the default value. This may create response bias toward the midpoint. We examine whether "3" responses are overrepresented in our EDA and note this as a limitation.
+
+### Secondary Outcomes (Post-Treatment Survey)
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| `preferred_timer` | Categorical | COUNTDOWN / HOURGLASS / NO_PREFERENCE |
+| `would_use_again` | Binary | Intent to use preferred timer again |
+| `recommend_to_others` | Binary | Intent to recommend to others |
+
+## Covariates
+
+From the baseline survey:
+
+- **time_anxiety_score** (1-5): Self-reported tendency to feel anxious about time
+- **classes_enrolled**: Current academic load (potential stress moderator)
+- **typical_focus_duration**: Self-reported typical focus session length in minutes
+- **uses_timer_currently**: Binary indicator of current timer use habits
+
+## Statistical Approach
+
+### Model 1: Paired Analysis (Primary)
+
+For each Likert outcome, we conduct a paired t-test comparing each participant's ratings under the two conditions:
+
+$$H_0: \mu_{HOURGLASS} - \mu_{COUNTDOWN} = 0$$
+
+This approach treats each participant as their own control, eliminating between-subject confounding.
+
+### Model 2: Fixed Effects Regression
+
+To estimate treatment effects with robust standard errors:
+
+$$Y_{it} = \beta_0 + \beta_1 \cdot HOURGLASS_t + \alpha_i + \epsilon_{it}$$
+
+Where:
+- $Y_{it}$ is the outcome for participant $i$ in session $t$
+- $HOURGLASS_t$ is an indicator for the hourglass condition
+- $\alpha_i$ are participant fixed effects
+- $\beta_1$ is the treatment effect of interest
+
+We report heteroskedasticity-consistent (HC1) standard errors.
+
+### Model 3: With Baseline Covariates
+
+To improve precision and explore potential moderation:
+
+$$Y_{it} = \beta_0 + \beta_1 \cdot HOURGLASS_t + \beta_2 \cdot TimeAnxiety_i + \alpha_i + \epsilon_{it}$$
+
+### Effect Sizes
+
+We report Cohen's d for within-subjects designs:
+
+$$d = \frac{\bar{D}}{SD_D}$$
+
+Where $\bar{D}$ is the mean difference score and $SD_D$ is the standard deviation of difference scores.
+
+\newpage
+
+# Results
+
+## Descriptive Statistics
+
+### Sample Characteristics
+
+```{r table1-baseline, echo=FALSE}
+# Table 1: Baseline Sample Characteristics
+baseline_table <- data.frame(
+  Characteristic = c("Time Anxiety Score (1-5)",
+                     "Typical Focus Duration (min)",
+                     "Classes Enrolled",
+                     "Currently Uses Timer"),
+  M = c(round(baseline_summary$time_anxiety_mean, 2),
+        round(baseline_summary$typical_focus_mean, 1),
+        round(baseline_summary$classes_mean, 2),
+        paste0(round(baseline_summary$uses_timer_pct, 1), "%")),
+  SD = c(round(baseline_summary$time_anxiety_sd, 2),
+         round(baseline_summary$typical_focus_sd, 1),
+         round(baseline_summary$classes_sd, 2),
+         "-")
+)
+
+kable(baseline_table,
+      caption = paste0("Table 1: Baseline Sample Characteristics (N = ", baseline_summary$n, ")"),
+      col.names = c("Characteristic", "M", "SD"),
+      align = c("l", "c", "c")) %>%
+  kable_styling(latex_options = c("hold_position"), full_width = FALSE)
+```
+
+### Outcome Distributions by Condition
+
+```{r table2-outcomes, echo=FALSE}
+# Table 2: Subjective Outcome Means by Timer Condition
+countdown_data <- outcome_summary %>% filter(condition == "COUNTDOWN")
+hourglass_data <- outcome_summary %>% filter(condition == "HOURGLASS")
+
+outcome_table <- data.frame(
+  Outcome = c("Perceived Stress", "Ease of Following", "Focus Quality"),
+  COUNTDOWN = c(
+    paste0(round(countdown_data$stress_mean, 2), " (", round(countdown_data$stress_sd, 2), ")"),
+    paste0(round(countdown_data$ease_mean, 2), " (", round(countdown_data$ease_sd, 2), ")"),
+    paste0(round(countdown_data$quality_mean, 2), " (", round(countdown_data$quality_sd, 2), ")")
+  ),
+  HOURGLASS = c(
+    paste0(round(hourglass_data$stress_mean, 2), " (", round(hourglass_data$stress_sd, 2), ")"),
+    paste0(round(hourglass_data$ease_mean, 2), " (", round(hourglass_data$ease_sd, 2), ")"),
+    paste0(round(hourglass_data$quality_mean, 2), " (", round(hourglass_data$quality_sd, 2), ")")
+  ),
+  Difference = c(
+    round(hourglass_data$stress_mean - countdown_data$stress_mean, 2),
+    round(hourglass_data$ease_mean - countdown_data$ease_mean, 2),
+    round(hourglass_data$quality_mean - countdown_data$quality_mean, 2)
+  )
+)
+
+kable(outcome_table,
+      caption = "Table 2: Subjective Outcome Means by Timer Condition",
+      col.names = c("Outcome", "COUNTDOWN M (SD)", "HOURGLASS M (SD)", "Difference"),
+      align = c("l", "c", "c", "c")) %>%
+  kable_styling(latex_options = c("hold_position"), full_width = FALSE) %>%
+  footnote(general = "Difference = HOURGLASS - COUNTDOWN. Positive values indicate higher ratings for HOURGLASS.")
+```
+
+## Main Treatment Effects
+
+```{r table3-effects, echo=FALSE}
+# Table 3: Treatment Effect Estimates
+effects_table <- data.frame(
+  Outcome = c("Perceived Stress", "Perceived Stress",
+              "Ease of Following", "Ease of Following",
+              "Focus Quality", "Focus Quality"),
+  Model = c("Paired t-test", "Fixed Effects",
+            "Paired t-test", "Fixed Effects",
+            "Paired t-test", "Fixed Effects"),
+  Estimate = c(
+    ifelse(!is.null(stress_ttest), round(stress_ttest$estimate, 2), NA),
+    round(stress_robust["conditionHOURGLASS", "Estimate"], 2),
+    ifelse(!is.null(ease_ttest), round(ease_ttest$estimate, 2), NA),
+    round(ease_robust["conditionHOURGLASS", "Estimate"], 2),
+    ifelse(!is.null(quality_ttest), round(quality_ttest$estimate, 2), NA),
+    round(quality_robust["conditionHOURGLASS", "Estimate"], 2)
+  ),
+  SE = c(
+    ifelse(!is.null(stress_ttest),
+           round(sd(paired_data$stress_diff)/sqrt(n_paired), 2), NA),
+    round(stress_robust["conditionHOURGLASS", "Std. Error"], 2),
+    ifelse(!is.null(ease_ttest),
+           round(sd(paired_data$ease_diff)/sqrt(n_paired), 2), NA),
+    round(ease_robust["conditionHOURGLASS", "Std. Error"], 2),
+    ifelse(!is.null(quality_ttest),
+           round(sd(paired_data$quality_diff, na.rm=TRUE)/sqrt(n_paired), 2), NA),
+    round(quality_robust["conditionHOURGLASS", "Std. Error"], 2)
+  ),
+  p_value = c(
+    ifelse(!is.null(stress_ttest), round(stress_ttest$p.value, 3), NA),
+    round(stress_robust["conditionHOURGLASS", "Pr(>|t|)"], 3),
+    ifelse(!is.null(ease_ttest), round(ease_ttest$p.value, 3), NA),
+    round(ease_robust["conditionHOURGLASS", "Pr(>|t|)"], 3),
+    ifelse(!is.null(quality_ttest), round(quality_ttest$p.value, 3), NA),
+    round(quality_robust["conditionHOURGLASS", "Pr(>|t|)"], 3)
+  ),
+  Cohens_d = c(
+    round(cohens_d_stress, 2), "-",
+    round(cohens_d_ease, 2), "-",
+    round(cohens_d_quality, 2), "-"
+  )
+)
+
+kable(effects_table,
+      caption = "Table 3: Treatment Effect Estimates (HOURGLASS vs. COUNTDOWN)",
+      col.names = c("Outcome", "Model", "Estimate", "SE", "p-value", "Cohen's d"),
+      align = c("l", "l", "c", "c", "c", "c")) %>%
+  kable_styling(latex_options = c("hold_position"), full_width = FALSE) %>%
+  footnote(general = "Positive estimates indicate higher ratings for HOURGLASS.")
+```
+
+## Timer Preferences
+
+```{r preferences, echo=FALSE, results='asis'}
+if (nrow(post_treatment) > 0) {
+  pref_counts <- post_treatment %>%
+    group_by(preferred_timer) %>%
+    summarise(n = n(), .groups = "drop") %>%
+    mutate(pct = round(100 * n / sum(n), 1))
+
+  countdown_pref <- pref_counts %>%
+    filter(preferred_timer == "COUNTDOWN")
+  hourglass_pref <- pref_counts %>%
+    filter(preferred_timer == "HOURGLASS")
+  no_pref <- pref_counts %>%
+    filter(preferred_timer == "NO_PREFERENCE")
+
+  cat(paste0("Of the ", n_post_treatment,
+             " participants who completed the post-treatment survey:\n\n"))
+  cat(paste0("- ", ifelse(nrow(countdown_pref) > 0, countdown_pref$n, 0),
+             " (", ifelse(nrow(countdown_pref) > 0, countdown_pref$pct, 0),
+             "%) preferred COUNTDOWN\n"))
+  cat(paste0("- ", ifelse(nrow(hourglass_pref) > 0, hourglass_pref$n, 0),
+             " (", ifelse(nrow(hourglass_pref) > 0, hourglass_pref$pct, 0),
+             "%) preferred HOURGLASS\n"))
+  cat(paste0("- ", ifelse(nrow(no_pref) > 0, no_pref$n, 0),
+             " (", ifelse(nrow(no_pref) > 0, no_pref$pct, 0),
+             "%) had no preference\n\n"))
+
+  # Binomial test
+  pref_binary <- post_treatment %>%
+    filter(preferred_timer %in% c("COUNTDOWN", "HOURGLASS"))
+  if (nrow(pref_binary) >= 2) {
+    n_hg <- sum(pref_binary$preferred_timer == "HOURGLASS")
+    pref_binom <- binom.test(n_hg, nrow(pref_binary), p = 0.5)
+    cat(paste0("Binomial test against 50/50: p = ",
+               round(pref_binom$p.value, 3), "\n"))
+  }
+} else {
+  cat("No post-treatment survey data available.\n")
+}
+```
+
+## Figures
+
+```{r figure1-distributions, echo=FALSE, fig.cap="Figure 1: Distribution of Likert Responses by Condition", fig.height=7}
+# Reshape data for faceted plot
+likert_long <- rated_sessions %>%
+  select(session_id, condition, perceived_stress,
+         ease_of_following, subjective_focus_quality) %>%
+  pivot_longer(
+    cols = c(perceived_stress, ease_of_following, subjective_focus_quality),
+    names_to = "outcome",
+    values_to = "rating"
+  ) %>%
+  mutate(
+    outcome = factor(outcome,
+      levels = c("perceived_stress", "ease_of_following",
+                 "subjective_focus_quality"),
+      labels = c("Perceived Stress", "Ease of Following",
+                 "Subjective Focus Quality"))
+  )
+
+ggplot(likert_long, aes(x = factor(rating), fill = condition)) +
+  geom_bar(position = "dodge", alpha = 0.8) +
+  facet_wrap(~outcome, ncol = 1, scales = "free_y") +
+  scale_fill_manual(values = c("COUNTDOWN" = "#1f77b4",
+                               "HOURGLASS" = "#ff7f0e")) +
+  labs(
+    title = "Distribution of Likert Responses by Condition",
+    subtitle = "1 = lowest/worst, 5 = highest/best",
+    x = "Rating",
+    y = "Count",
+    fill = "Condition"
+  ) +
+  theme(legend.position = "bottom")
+```
+
+```{r figure2-paired, echo=FALSE, fig.cap="Figure 2: Within-Person Comparison of Subjective Ratings", fig.height=5}
+if (nrow(paired_data) >= 2) {
+  paired_long <- paired_data %>%
+    select(participant_id,
+           perceived_stress_COUNTDOWN, perceived_stress_HOURGLASS,
+           ease_of_following_COUNTDOWN, ease_of_following_HOURGLASS,
+           subjective_focus_quality_COUNTDOWN,
+           subjective_focus_quality_HOURGLASS) %>%
+    pivot_longer(
+      cols = -participant_id,
+      names_to = c("outcome", "condition"),
+      names_pattern = "(.+)_(COUNTDOWN|HOURGLASS)",
+      values_to = "rating"
+    ) %>%
+    mutate(
+      outcome = factor(outcome,
+        levels = c("perceived_stress", "ease_of_following",
+                   "subjective_focus_quality"),
+        labels = c("Perceived Stress", "Ease of Following", "Focus Quality"))
+    )
+
+  ggplot(paired_long, aes(x = condition, y = rating, group = participant_id)) +
+    geom_line(alpha = 0.4, color = "gray50") +
+    geom_point(aes(color = condition), size = 2) +
+    facet_wrap(~outcome, scales = "free_y") +
+    scale_color_manual(values = c("COUNTDOWN" = "#1f77b4",
+                                  "HOURGLASS" = "#ff7f0e")) +
+    labs(
+      title = "Within-Person Comparison of Subjective Ratings",
+      subtitle = "Each line connects one participant's ratings across conditions",
+      x = "Condition",
+      y = "Rating (1-5)"
+    ) +
+    theme(legend.position = "none")
+} else {
+  cat("Insufficient paired data for visualization.")
+}
+```
+
+\newpage
+
+# Discussion
+
+## Interpretation of Results
+
+[PLACEHOLDER - Interpret findings in context of hypotheses]
+
+**H1 (Perceived Stress):** [PLACEHOLDER - Was hourglass less stressful?]
+
+**H2 (Ease of Following):** [PLACEHOLDER - How did timer type affect ease?]
+
+**H3 (Preferences):** [PLACEHOLDER - Did preferences differ from chance?]
+
+## Mechanisms
+
+[PLACEHOLDER - Discuss theoretical implications]
+
+If results support H1, this suggests that reduced temporal precision does indeed decrease time-related stress during focus sessions, consistent with theories of prospective time estimation and attentional allocation.
+
+## Limitations
+
+Several limitations should be considered when interpreting these findings:
+
+1. **Duration outcome not available:** Our original primary outcome (session duration) was not a valid measure due to the timer enforcing exactly 25 minutes. While we successfully pivoted to subjective outcomes, this was not our pre-registered primary analysis.
+
+2. **Survey default bias:** The survey UI pre-selected "3" as the default value. This may inflate responses at the midpoint if some participants did not actively adjust their responses. We [did/did not] observe evidence of overrepresentation at the "3" response level.
+
+3. **Sample size:** With N = `r n_paired` participants providing paired observations, our study was powered to detect medium effects but may have missed smaller effects. The original power analysis was designed for the duration outcome.
+
+4. **Ecological validity:** Participants knew they were in a study and focused for a fixed 25-minute period. Real-world timer use may involve different motivations and session lengths.
+
+5. **Treatment contrast:** Both timers provided clear start/end signals. Results may differ for timers without clear completion indicators.
+
+6. **Demand characteristics:** Participants may have inferred that we expected differences between conditions, potentially affecting their ratings.
+
+## Future Directions
+
+[PLACEHOLDER - Suggestions for future research]
+
+1. Examine effects on actual task performance (accuracy, output quality) in addition to subjective experience.
+
+2. Test with variable session durations to capture potential behavioral effects on self-pacing.
+
+3. Investigate moderators such as individual differences in time anxiety or working memory capacity.
+
+4. Compare to a no-timer control condition to assess whether any timer increases stress relative to unstructured work.
+
+\newpage
+
+# Conclusion
+
+This study examined whether timer visualization design affects the subjective experience of focus sessions. Using a within-subjects crossover design with N = `r n_enrolled` participants (`r n_paired` with complete paired data), we compared a precise numerical countdown timer to an abstract hourglass animation.
+
+`r if(!is.null(stress_ttest)) paste0("Our primary hypothesis that hourglass visualization would reduce perceived stress ", ifelse(stress_ttest$p.value < 0.05, "was supported", "was not supported"), " (p = ", round(stress_ttest$p.value, 3), ", d = ", round(cohens_d_stress, 2), ").") else "We had insufficient paired data to test our primary hypothesis."`
+
+These findings suggest that timer visualization design `r if(!is.null(stress_ttest) && stress_ttest$p.value < 0.05) "can meaningfully affect" else "may not substantially affect"` the subjective experience of timed focus sessions. Future research should examine whether these effects translate to differences in task performance or longer-term timer use preferences.
+
+\newpage
+
+# References
+
+[PLACEHOLDER - Add references in BibTeX format to references.bib file]
+
+\newpage
+
+# Appendix
+
+## A: Baseline Survey Questions
+
+1. **Time Anxiety Score:** "On a scale of 1-5, how often do you feel anxious about time when working on tasks?" (1 = Never, 5 = Always)
+
+2. **Typical Focus Duration:** "How long (in minutes) can you typically focus on a single task without a break?"
+
+3. **Classes Enrolled:** "How many classes are you currently enrolled in?"
+
+4. **Uses Timer Currently:** "Do you currently use a timer or time management app when working?" (Yes/No)
+
+5. **Preferred Timer Type:** "If you use a timer, what type do you prefer?" (Countdown/Hourglass/Other/Don't use)
+
+## B: Post-Session Rating Questions
+
+1. **Perceived Stress:** "How stressful did you find this focus session?" (1 = Not at all stressful, 5 = Extremely stressful)
+
+2. **Ease of Following:** "How easy was it to follow the timer during your focus session?" (1 = Very difficult, 5 = Very easy)
+
+3. **Subjective Focus Quality:** "How would you rate your focus quality during this session?" (1 = Very poor, 5 = Excellent)
+
+4. **Comments:** [Open text field]
+
+## C: Post-Treatment Survey Questions
+
+1. **Preferred Timer:** "Which timer did you prefer overall?" (Countdown/Hourglass/No preference)
+
+2. **Would Use Again:** "Would you use your preferred timer again for future focus sessions?" (Yes/No)
+
+3. **Recommend to Others:** "Would you recommend your preferred timer to others?" (Yes/No)
+
+4. **Qualitative Feedback:** "Please share any additional thoughts about your experience with the two timers." [Open text field]
+
+## D: Original Power Analysis
+
+[Reference Group4PowerAnalysis.pdf]
+
+The original power analysis assumed:
+- Continuous outcome: session duration in minutes
+- Expected effect size: 3 minutes difference
+- Within-person SD: 5 minutes
+- Target N: 40 participants
+- Resulting power: 76%
+
+This power analysis does not directly apply to our Likert-scale outcomes. For 5-point Likert scales treated as continuous with a within-subject SD of approximately 1 point, N = 25 paired observations provides approximately 80% power to detect a 0.5-point difference (Cohen's d ~ 0.5).
+
+## E: Robustness Checks
+
+[PLACEHOLDER - Additional analyses if needed]
+
+1. **Order effects:** Test whether session number (1 vs. 2) affects outcomes.
+
+2. **Excluding potential satisficers:** Sensitivity analysis excluding participants who responded "3" to all items.
+
+3. **Ordinal regression:** As a robustness check, ordinal logistic regression for Likert outcomes.
